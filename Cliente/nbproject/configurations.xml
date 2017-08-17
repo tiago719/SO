@@ -37,7 +37,7 @@
       </toolsSet>
       <compileType>
         <linkerTool>
-          <commandLine>-lpthread -pthread - lncurses</commandLine>
+          <commandLine>-lpthread -pthread -lncurses</commandLine>
         </linkerTool>
       </compileType>
       <item path="estrutura.h" ex="false" tool="3" flavor2="0">
