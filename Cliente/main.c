@@ -11,6 +11,8 @@
  * Created on 4 de Janeiro de 2017, 17:13
  */
 
+//OLA
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ncurses.h>
