@@ -848,62 +848,83 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
         case 'a':
             //printf("\nEntrei no case A\n");
             for (i = 0; i < cli->tam; i++) {
-                if (cli->c[i].id == cliente->id) {
-
-                    if (cli->c[i].equi == '-') {
+                if (cli->c[i].id == cliente->id) 
+                {
+                    if (cli->c[i].equi == '-') 
+                    {
                         //printf("\nESCOLHEU EQUIPA A\n");
                         cli->c[i].equi = 'a';
-                    } else if (cli->c[i].equi == 'b') {
-                        if (cli->c[i].jog == -1) {
+                    } 
+                    else if (cli->c[i].equi == 'b') 
+                    {
+                        if (cli->c[i].jog == -1) 
+                        {
                             cli->c[i].equi = 'a';
-                        } else {
+                        } 
+                        else 
+                        {
                             JOG[1][cli->c[i].jog].humano = 0;
                             cli->c[i].jog = -1;
                             cli->c[i].equi = 'a';
                         }
-                    } else {
+                    } 
+                    else 
+                    {
                         //printf("\nvou deixar de ser desta equi\n");
-                        if (cli->c[i].jog == -1) {
+                        if (cli->c[i].jog == -1) 
+                        {
                             cli->c[i].equi = '-';
-                        } else {
-                            JOG[1][cli->c[i].jog].humano = 0;
+                        } 
+                        else 
+                        {
+                            JOG[0][cli->c[i].jog].humano = 0;
                             cli->c[i].jog = -1;
                             cli->c[i].equi = '-';
                         }
                     }
                     break;
-
                 }
-
             }
             break;
         case 'b':
-            for (i = 0; i < cli->tam; i++) {
-                if (cli->c[i].id == cliente->id) {
+            for (i = 0; i < cli->tam; i++) 
+            {
+                if (cli->c[i].id == cliente->id) 
+                {
                     //printf("\nESCOLHEU EQUIPA B\n");
-                    if (cli->c[i].equi == '-') {
+                    if (cli->c[i].equi == '-') 
+                    {
                         cli->c[i].equi = 'b';
-                    } else if (cli->c[i].equi == 'a') {
-                        if (cli->c[i].jog == -1) {
+                    } 
+                    else if (cli->c[i].equi == 'a') 
+                    {
+                        if (cli->c[i].jog == -1) 
+                        {
                             cli->c[i].equi = 'b';
-                        } else {
+                        } 
+                        else 
+                        {
                             JOG[0][cli->c[i].jog].humano = 0;
                             cli->c[i].jog = -1;
                             cli->c[i].equi = 'b';
                         }
-                    } else {
+                    } 
+                    else 
+                    {
                         //printf("\nvou deixar de ser desta equi\n");
-                        if (cli->c[i].jog == -1) {
+                        if (cli->c[i].jog == -1) 
+                        {
                             cli->c[i].equi = '-';
-                        } else {
-                            JOG[0][cli->c[i].jog].humano = 1;
+                        } 
+                        else 
+                        {
+                            JOG[1][cli->c[i].jog].humano = 0;
                             cli->c[i].jog = -1;
                             cli->c[i].equi = '-';
                         }
                     }
                     break;
                 }
-
             }
             break;
         case '0':
