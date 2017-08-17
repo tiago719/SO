@@ -27,7 +27,7 @@
 typedef struct {
     int y, x;
 } POSICAO;
-
+;
 typedef struct {
     char fim, humano, equi;
     int tempo, num, x, y, posse_bola;
