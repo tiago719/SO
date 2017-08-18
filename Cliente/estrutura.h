@@ -6,8 +6,8 @@
  */
 
 #define FIFO "/tmp/fifo"
-#define limSupXRedes 16
-#define limInfXRedes 6
+#define limSupXRedes 18
+#define limInfXRedes 4
 #define MaxX 21
 #define MaxY 51
 
