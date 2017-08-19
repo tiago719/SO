@@ -30,7 +30,7 @@ typedef struct {
 ;
 typedef struct {
     char fim, humano, equi;
-    int tempo, num, id, x, y, posse_bola;
+    int tempo, num, x, y, posse_bola;
     int precisao_remate;
     POSICAO *posicao;
 } JOGADOR;
@@ -136,7 +136,6 @@ void montar_campo()
     JOG[0][0].fim = 0;
     JOG[0][0].humano = 0;
     JOG[0][0].num = cont;
-    JOG[0][0].id = id;
     JOG[0][0].posicao = &ele[id];
     JOG[0][0].precisao_remate = 25;
     JOG[0][0].tempo = 300000;
@@ -144,7 +143,6 @@ void montar_campo()
     JOG[1][0].fim = 0;
     JOG[1][0].humano = 0;
     JOG[1][0].num = cont + 10;
-    JOG[1][0].id = total+id;
     JOG[1][0].posicao = &ele[total+(id++)];
     JOG[1][0].precisao_remate = 25;
     JOG[1][0].tempo = 300000;
@@ -155,7 +153,6 @@ void montar_campo()
         JOG[0][i].fim = 0;
         JOG[0][i].humano = 0;
         JOG[0][i].num = cont;
-        JOG[0][i].id = id;
         JOG[0][i].posicao = &ele[id];
         JOG[0][i].precisao_remate = 80;
         JOG[0][i].tempo = 400000;
@@ -163,7 +160,6 @@ void montar_campo()
         JOG[1][i].fim = 0;
         JOG[1][i].humano = 0;
         JOG[1][i].num = cont + 10;
-        JOG[1][i].id = id+total;
         JOG[1][i].posicao = &ele[total+(id++)];
         JOG[1][i].precisao_remate = 80;
         JOG[1][i].tempo = 400000;
@@ -177,7 +173,6 @@ void montar_campo()
         JOG[0][i].fim = 0;
         JOG[0][i].humano = 0;
         JOG[0][i].num = cont;
-        JOG[0][i].id = id;
         JOG[0][i].posicao = &ele[id];
         JOG[0][i].precisao_remate = 60;
         JOG[0][i].tempo = 300000;
@@ -185,7 +180,6 @@ void montar_campo()
         JOG[1][i].fim = 0;
         JOG[1][i].humano = 0;
         JOG[1][i].num = cont + 10;
-        JOG[1][i].id = id+total;
         JOG[1][i].posicao = &ele[total+(id++)];
         JOG[1][i].precisao_remate = 60;
         JOG[1][i].tempo = 300000;
