@@ -123,14 +123,12 @@ void inicializacao_campo(char * str) {
     usleep(100);
 }
 
-void montar_campo() 
-{
+void inicializaJog(){
     int cont=0, i, id=0;
     JOG = (JOGADOR **) malloc(sizeof (JOGADOR) * 2);
 
     JOG[0] = (JOGADOR *) malloc(sizeof (JOGADOR) * total);
     JOG[1] = (JOGADOR *) malloc(sizeof (JOGADOR) * total);
-    ele = (POSICAO*) malloc(sizeof (POSICAO)*(total * 2 + 2));
 
     //INICIAOLIZACAO REDES
     JOG[0][0].fim = 0;
@@ -185,10 +183,11 @@ void montar_campo()
         JOG[1][i].tempo = 300000;
         cont++;
     }
-    //---------------------
+    //--------------------- 
+}
 
-    
-    
+void montaCampo(){
+    int i;
     ele[0].x = 11;
     ele[0].y = 1;
     ele[total].x = 11;
@@ -327,7 +326,7 @@ void golo() {
         else 
             resultados.res_eq1++;
         
-        montar_campo();
+        montaCampo();
         int i;
         char str[80];
         serv_clie j;
@@ -337,12 +336,16 @@ void golo() {
         j.yant = 99;
         j.ynovo = 99;
         posse_bola = NULL;
-        ele[total * 2].x = 11; //bola
-        ele[total * 2].y = 26;
+        
+        montaCampo();
+//        ele[total * 2].x = 11; //bola
+//        ele[total * 2].y = 26;
         atualiza_campo(&j);
         sleep(1);
 
         for (i = 0; i < clientes.tam; i++) {
+            clientes.c[i].jogador = NULL;
+            
             sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
             inicializacao_campo(str);
         }
@@ -868,7 +871,6 @@ void controlaJogador(int op, CLIENTE * cliente){
     usleep(cliente->jogador->tempo);
 }
 
-
 void operacao(clie_serv *cliente, CLIENTES * cli) {
     int i, fd;
     serv_clie j;
@@ -906,7 +908,8 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
                         } 
                         else 
                         {
-                            cli->c[i].jogador->humano = 0;
+                            if (cli->c[i].jogador != NULL)
+                                cli->c[i].jogador->humano = 0;
                             cli->c[i].jogador = NULL;
                             cli->c[i].equi = '-';
                         }
@@ -947,7 +950,8 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
                         } 
                         else 
                         {
-                            cli->c[i].jogador->humano = 0;
+                            if (cli->c[i].jogador != NULL) 
+                                cli->c[i].jogador->humano = 0;
                             cli->c[i].jogador = NULL;
                             cli->c[i].equi = '-';
                         }
@@ -1503,7 +1507,10 @@ void * func_jogo(void * dados) {
 
     total = (1 + Navanc + Ndefesa);
 
-    montar_campo();
+    ele = (POSICAO*) malloc(sizeof (POSICAO)*(total * 2 + 2));
+
+    inicializaJog();
+    montaCampo();
 
     pthread_t receber_cliente;
 
