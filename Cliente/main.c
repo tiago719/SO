@@ -29,20 +29,32 @@
 
 void atualiza_campo(serv_clie * j) {
 
+    /*
     if (j->jogador == 'o')
         attron(COLOR_PAIR(3));
-    else if (j->jogador == 'o' + 1) {
+    else if (j->equipa == 'a') {
         attron(COLOR_PAIR(1));
         j->jogador = 'o';
-    } else if (j->jogador == 'o' + 2) {
+    } else if (j->equipa=='b') {
         attron(COLOR_PAIR(2));
         j->jogador = 'o';
-    } else if (j->jogador >= '0' + 10) {
+    } else if (j->equipa=='b') {
         attron(COLOR_PAIR(1));
         j->jogador -= 10;
     } else
         attron(COLOR_PAIR(2));
-
+     * */
+    
+    if(j->equipa=='a')
+        attron(COLOR_PAIR(2));
+    else if(j->equipa=='b')
+        attron(COLOR_PAIR(1));
+    else
+    {    
+        attron(COLOR_PAIR(3));
+        j->jogador='o';
+    }
+                
     mvaddch(j->xant, j->yant, ' ');
 
     mvaddch(j->xnovo, j->ynovo, j->jogador);

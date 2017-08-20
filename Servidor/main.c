@@ -95,6 +95,7 @@ void inicializacao_campo(char * str) {
         j.xant = ele[cont].x;
         j.yant = ele[cont].y;
         j.jogador = '0' + (JOG[0][i].num);
+        j.equipa='a';
 
         cont++;
         atualiza_campo(&j);
@@ -107,6 +108,7 @@ void inicializacao_campo(char * str) {
         j.xant = ele[cont].x;
         j.yant = ele[cont].y;
         j.jogador = '0' + (JOG[1][i].num);
+        j.equipa='b';
 
         cont++;
         atualiza_campo(&j);
@@ -119,6 +121,7 @@ void inicializacao_campo(char * str) {
     j.xant = ele[cont].x;
     j.yant = ele[cont].y;
     j.jogador = 'o';
+    j.equipa='n';
     atualiza_campo(&j);
     usleep(100);
 }
@@ -137,13 +140,16 @@ void inicializaJog(){
     JOG[0][0].posicao = &ele[id];
     JOG[0][0].precisao_remate = 25;
     JOG[0][0].tempo = 300000;
+    JOG[0][0].equi='a';
     
     JOG[1][0].fim = 0;
     JOG[1][0].humano = 0;
-    JOG[1][0].num = cont + 10;
+    JOG[1][0].num = cont;
     JOG[1][0].posicao = &ele[total+(id++)];
     JOG[1][0].precisao_remate = 25;
     JOG[1][0].tempo = 300000;
+    JOG[1][0].equi='b';
+        
     cont++;
     //---------------------
     //INICIAOLIZACAO DEFESAS
@@ -154,13 +160,16 @@ void inicializaJog(){
         JOG[0][i].posicao = &ele[id];
         JOG[0][i].precisao_remate = 80;
         JOG[0][i].tempo = 400000;
+        JOG[0][i].equi='a';
         
         JOG[1][i].fim = 0;
         JOG[1][i].humano = 0;
-        JOG[1][i].num = cont + 10;
+        JOG[1][i].num = cont;
         JOG[1][i].posicao = &ele[total+(id++)];
         JOG[1][i].precisao_remate = 80;
         JOG[1][i].tempo = 400000;
+        JOG[1][i].equi='b';
+
         cont++;
     }
     //---------------------
@@ -174,13 +183,16 @@ void inicializaJog(){
         JOG[0][i].posicao = &ele[id];
         JOG[0][i].precisao_remate = 60;
         JOG[0][i].tempo = 300000;
+        JOG[0][i].equi='a';
         
         JOG[1][i].fim = 0;
         JOG[1][i].humano = 0;
-        JOG[1][i].num = cont + 10;
+        JOG[1][i].num = cont;
         JOG[1][i].posicao = &ele[total+(id++)];
         JOG[1][i].precisao_remate = 60;
         JOG[1][i].tempo = 300000;
+        JOG[1][i].equi='b';
+        
         cont++;
     }
     //--------------------- 
@@ -499,7 +511,7 @@ void * move_jogador(void * dados) {
     if (jog->equi == 'b')
         num = total;
 
-     while (!jog->fim)
+     while (!jog->fim)//TODO: Esta variavel nao faz sentido
      {
         if (!jog->humano) 
         {
@@ -538,6 +550,10 @@ void * move_jogador(void * dados) {
                 }
 
                 j.jogador = '0' + jog->num;
+                if(jog->equi=='a')
+                    j.equipa='a';
+                else 
+                    j.equipa='b';
 
                 j.xant = jog->posicao->x;
                 j.yant = jog->posicao->y;
@@ -685,8 +701,7 @@ void * move_redes(void * dados) {
             {
                 d.x=-1;
             }
-            if(jog->posicao->x + d.x >= limInfXRedes && 
-                    jog->posicao->x + d.x <= limSupXRedes)
+            if(jog->posicao->x + d.x >= limInfXRedes && jog->posicao->x + d.x <= limSupXRedes)
             {
                 j.xant = jog->posicao->x;
                 j.yant = jog->posicao->y;
@@ -698,6 +713,11 @@ void * move_redes(void * dados) {
                 j.ynovo = jog->posicao->y;
 
                 j.jogador = '0' + jog->num ; 
+                
+                if(jog->equi=='a')
+                    j.equipa='a';
+                else 
+                    j.equipa='b';
             }    
             //pthread_mutex_t_unlock(&trinco);
             atualiza_campo(&j);
@@ -731,6 +751,7 @@ void * move_redes(void * dados) {
     } 
     pthread_exit(0);
 }
+
 JOGADOR * procuraJogador(char equi, int op){
     int i, eq;
     if (equi == 'a')
@@ -748,36 +769,69 @@ JOGADOR * procuraJogador(char equi, int op){
     
     return NULL;
 }
+
 void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
     int i, a, flag = 0;
     POSICAO temp;
     JOGADOR * aux;
 
-    for (i = 0; i < cli->tam; i++) {
-        if (novo->id == cli->c[i].id) {
+    for (i = 0; i < cli->tam; i++) 
+    {
+        if (novo->id == cli->c[i].id) 
+        {
             //printf("\nENcontreime no meio dos clientes\n");
-            if (cli->c[i].equi != '-') {
-                if (cli->c[i].jogador != NULL){
-                    if (cli->c[i].jogador->num == cam) {//deixa de controlar o jogador
-                        cli->c[i].jogador->humano = 0;                      
-                        cli->c[i].jogador = NULL;
+            if (cli->c[i].equi != '-') 
+            {              
+                if(cli->c[i].jogador==NULL)
+                {
+                    aux=procuraJogador(cli->c[i].equi, cam);
+
+                    for(a=0;a<cli->tam;a++)
+                    {
+                        if(cli->c[a].jogador==aux)
+                        {
+                            //o jogador pretendido ja e controlado 
+                            flag=1;
+                            break;
+                        }                                             
                     }
-                    else if (cli->c[i].jogador == posse_bola) {
-                        if ((rand() % 100) < cli->c[i].jogador->precisao_remate) {
+                    if(flag==0)
+                    {
+                        cli->c[i].jogador=procuraJogador(cli->c[i].equi,cam);
+                        cli->c[i].jogador->humano=1;
+                    }
+                }
+                else if(cli->c[i].jogador->num==cam)
+                {
+                    cli->c[i].jogador->humano = 0;
+                    cli->c[i].jogador=NULL;
+                }
+                else
+                {
+                    //passa para o cam
+                    if (cli->c[i].jogador == posse_bola) 
+                    {
+                        if ((rand() % 100) < cli->c[i].jogador->precisao_remate) 
+                        {
                             passe(ele[total * 2], cli->c[i].jogador->posicao);
                             //printf("\nVou para o sitio certo\n");
-                        } else {
+                        } 
+                        else 
+                        {
                             //printf("\nVou para o sitio aleatorio\n");
                             int aux = rand() % 4;
-                            if (aux == 0) {
+                            if (aux == 0)
+                            {
                                 temp.x = 0;
                                 temp.y = rand() % (MaxY - 1);
-                            } else
-                                if (aux == 1) {
+                            } 
+                            else
+                                if (aux == 1) 
+                                {
                                 temp.y = 0;
                                 temp.x = rand() % (MaxX - 1);
-                            } else
-                                if (aux == 2) {
+                                } 
+                                else if (aux == 2) {
                                 temp.y = MaxY - 1;
                                 temp.x = rand() % (MaxX - 1);
                             } else {
@@ -788,37 +842,15 @@ void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
                             passe(ele[total * 2], &temp);
                         }
                     }
-                }else if (cli->c[i].jogador == NULL) {
-                    aux = procuraJogador(cli->c[i].equi, cam);
-                    //printf("\nvou ver se o posso controlar\n");
-                    for (a = 0; a < cli->tam; a++) {
-                        if (cli->c[a].jogador == aux){
-                            //o jog pretendido ja e controlado
-                            flag = 1;
-                            // printf("\nJa esta ocupado\n");
-                            break;
-                        }
-                    }
-                    if (flag == 0) {
-                        cli->c[i].jogador = aux;
-                        cli->c[i].jogador->humano = 1;
-                    }
-                } else {
-                    //printf("\nRemata a bola para o cam\n");
-                    //remata para o cam 
-
-                    
-                }
-            } else {
-                //printf("\nA equipa esta a NULL\n");
-            }
+                }     
+            } 
             break;
         }
     }
 }
 
 void controlaJogador(int op, CLIENTE * cliente){
-    int xSum=0, ySum=0, i;
+    int xSum=0, ySum=0, i, maxXJog=MaxX, minXJog=0;
     serv_clie j;
     
     switch (op){
@@ -839,13 +871,20 @@ void controlaJogador(int op, CLIENTE * cliente){
     if (cliente->jogador == NULL)
         return;
     
+    if(cliente->jogador->num==0)
+    {
+        ySum=0;
+        maxXJog=limSupXRedes;
+        minXJog=limInfXRedes;
+    }
+    
     j.xant = cliente->jogador->posicao->x;
     j.yant = cliente->jogador->posicao->y;
     
     xSum += cliente->jogador->posicao->x;
     ySum += cliente->jogador->posicao->y;
     
-    if (xSum < 0 || xSum > MaxX || ySum < 0 || ySum > MaxY)
+    if (xSum < minXJog|| xSum > maxXJog || ySum < 0 || ySum > MaxY)
         return;
     
     for (i = 0; i < (total * 2) + 2; i++){
@@ -862,7 +901,8 @@ void controlaJogador(int op, CLIENTE * cliente){
     cliente->jogador->posicao->x = xSum;
     cliente->jogador->posicao->y = ySum;
     
-    j.jogador = '0' + cliente->jogador->num;                  
+    j.jogador = '0' + cliente->jogador->num;   
+    j.equipa=cliente->jogador->equi;
 
     j.xnovo = cliente->jogador->posicao->x;
     j.ynovo = cliente->jogador->posicao->y;
@@ -886,35 +926,6 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
                         //printf("\nESCOLHEU EQUIPA A\n");
                         cli->c[i].equi = 'a';
                     } 
-                    else if (cli->c[i].equi == 'b') 
-                    {
-                        if (cli->c[i].jogador == NULL) 
-                        {
-                            cli->c[i].equi = 'a';
-                        } 
-                        else 
-                        {
-                            cli->c[i].jogador->humano = 0;
-                            cli->c[i].jogador = NULL;
-                            cli->c[i].equi = 'a';
-                        }
-                    } 
-                    else 
-                    {
-                        //printf("\nvou deixar de ser desta equi\n");
-                        if (cli->c[i].jogador == NULL) 
-                        {
-                            cli->c[i].equi = '-';
-                        } 
-                        else 
-                        {
-                            if (cli->c[i].jogador != NULL)
-                                cli->c[i].jogador->humano = 0;
-                            cli->c[i].jogador = NULL;
-                            cli->c[i].equi = '-';
-                        }
-                    }
-
                     break;
                 }
             }
@@ -929,34 +940,6 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
                     {
                         cli->c[i].equi = 'b';
                     }                    
-                    else if (cli->c[i].equi == 'a') 
-                    {
-                        if (cli->c[i].jogador == NULL) 
-                        {
-                            cli->c[i].equi = 'b';
-                        } 
-                        else 
-                        {
-                            cli->c[i].jogador->humano = 0;
-                            cli->c[i].jogador = NULL;
-                            cli->c[i].equi = 'b';
-                        }
-                    } 
-                    else 
-                    {
-                        //printf("\nvou deixar de ser desta equi\n");
-                        if (cli->c[i].jogador == NULL) 
-                        {
-                            cli->c[i].equi = '-';
-                        } 
-                        else 
-                        {
-                            if (cli->c[i].jogador != NULL) 
-                                cli->c[i].jogador->humano = 0;
-                            cli->c[i].jogador = NULL;
-                            cli->c[i].equi = '-';
-                        }
-                    }
                     break;
                 }
             }
@@ -1521,13 +1504,13 @@ void * func_jogo(void * dados) {
     pthread_t tarefa_bola;
 
     pthread_create(&tarefa_bola, NULL, &bola, FIM);
-//    pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
-//    pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
+    pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
+    pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
 
 
     for (i = 1; i < total; i++) {
-//        pthread_create(&tarefa[0][i], NULL, &move_jogador, (void *) &JOG[0][i]);
-//        pthread_create(&tarefa[1][i], NULL, &move_jogador, (void *) &JOG[1][i]);
+        pthread_create(&tarefa[0][i], NULL, &move_jogador, (void *) &JOG[0][i]);
+        pthread_create(&tarefa[1][i], NULL, &move_jogador, (void *) &JOG[1][i]);
     }
     
 
@@ -1604,6 +1587,7 @@ int main(int argc, char** argv) {//TODO:
         printf("SINTAXE: %s {nome_ficheiro}\n", argv[0]);
         return 1;
     }
+
     strcpy(clientes.nome_ficheiro, argv[1]);
 
 
@@ -1619,10 +1603,13 @@ int main(int argc, char** argv) {//TODO:
 
     int i, cont = 0;
     char tecla, cmd[80];
+    
+    /*if (access(FIFO, F_OK) == 0) {
+        printf("Ja esta um servidor em execução\n");
+        return 3;
+    }*///TODO: Descomentar isto
 
     int z = mkfifo(FIFO, 0600);
-
-
 
     do {
         printf("\nComando: ");
