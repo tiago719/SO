@@ -1604,6 +1604,12 @@ int main(int argc, char** argv) {//TODO:
         printf("SINTAXE: %s {nome_ficheiro}\n", argv[0]);
         return 1;
     }
+    
+    if (access(FIFO, F_OK) == 0) {
+        printf("Ja esta um servidor em execução\n");
+        return 3;
+    }
+    
     strcpy(clientes.nome_ficheiro, argv[1]);
 
 
