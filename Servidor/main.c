@@ -1604,12 +1604,7 @@ int main(int argc, char** argv) {//TODO:
         printf("SINTAXE: %s {nome_ficheiro}\n", argv[0]);
         return 1;
     }
-    
-    if (access(FIFO, F_OK) == 0) {
-        printf("Ja esta um servidor em execução\n");
-        return 3;
-    }
-    
+
     strcpy(clientes.nome_ficheiro, argv[1]);
 
 
@@ -1625,6 +1620,11 @@ int main(int argc, char** argv) {//TODO:
 
     int i, cont = 0;
     char tecla, cmd[80];
+    
+    if (access(FIFO, F_OK) == 0) {
+        printf("Ja esta um servidor em execução\n");
+        return 3;
+    }
 
     int z = mkfifo(FIFO, 0600);
 
