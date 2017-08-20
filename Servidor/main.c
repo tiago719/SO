@@ -914,6 +914,7 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
                             cli->c[i].equi = '-';
                         }
                     }
+
                     break;
                 }
             }
@@ -927,7 +928,7 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
                     if (cli->c[i].equi == '-') 
                     {
                         cli->c[i].equi = 'b';
-                    } 
+                    }                    
                     else if (cli->c[i].equi == 'a') 
                     {
                         if (cli->c[i].jogador == NULL) 
@@ -1209,7 +1210,7 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
         case 'l':
 
             for (i = 0; i < cli->tam; i++) {
-                if (cli->c[i].id = cliente->id) {
+                if (cli->c[i].id == cliente->id) {
                     break;
                 }
             }
@@ -1276,7 +1277,7 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
 
         case 'r':
             for (i = 0; i < cli->tam; i++) {
-                if (cli->c[i].id = cliente->id) {
+                if (cli->c[i].id == cliente->id) {
                     break;
                 }
             }
