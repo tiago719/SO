@@ -36,6 +36,7 @@ typedef struct {
     int xant;
     int yant;
     char jogador;
+    char equipa;
     int flag_logado;
     int flag_campo;
     RESULTADOS resultados;
