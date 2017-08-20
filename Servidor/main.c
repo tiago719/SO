@@ -752,7 +752,8 @@ void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
         if (novo->id == cli->c[i].id) {
             //printf("\nENcontreime no meio dos clientes\n");
             if (cli->c[i].equi != '-') {
-                if (cli->c[i].jog == cam- diferenca(cam)) {
+                if (cli->c[i].jog == cam- diferenca(cam)) 
+                {
                     //deixa de controlar o jogador
                     //printf("\n DEXOU DE CONTROLAR JOGADOR %d\n", cam);
                     if (cli->c[i].equi == 'a') 
@@ -764,10 +765,12 @@ void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
                         JOG[1][cam - diferenca(cam)].humano = 0;
                     }
                     cli->c[i].jog = -1;
-                } else if (cli->c[i].jog == -1) {
+                } 
+                else if (cli->c[i].jog == -1) 
+                {
                     //printf("\nvou ver se o posso controlar\n");
                     for (a = 0; a < cli->tam; a++) {
-                        if (cli->c[a].jog == cam && cli->c[a].equi == cli->c[i].equi) {
+                        if (cli->c[a].jog == cam- diferenca(cam) && cli->c[a].equi == cli->c[i].equi) {
                             //o jog pretendido ja e controlado
                             flag = 1;
                             // printf("\nJa esta ocupado\n");
@@ -854,34 +857,7 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
                     {
                         //printf("\nESCOLHEU EQUIPA A\n");
                         cli->c[i].equi = 'a';
-                    } 
-                    else if (cli->c[i].equi == 'b') 
-                    {
-                        if (cli->c[i].jog == -1) 
-                        {
-                            cli->c[i].equi = 'a';
-                        } 
-                        else 
-                        {
-                            JOG[1][cli->c[i].jog].humano = 0;
-                            cli->c[i].jog = -1;
-                            cli->c[i].equi = 'a';
-                        }
-                    } 
-                    else 
-                    {
-                        //printf("\nvou deixar de ser desta equi\n");
-                        if (cli->c[i].jog == -1) 
-                        {
-                            cli->c[i].equi = '-';
-                        } 
-                        else 
-                        {
-                            JOG[0][cli->c[i].jog].humano = 0;
-                            cli->c[i].jog = -1;
-                            cli->c[i].equi = '-';
-                        }
-                    }
+                    }                    
                     break;
                 }
             }
@@ -895,34 +871,7 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
                     if (cli->c[i].equi == '-') 
                     {
                         cli->c[i].equi = 'b';
-                    } 
-                    else if (cli->c[i].equi == 'a') 
-                    {
-                        if (cli->c[i].jog == -1) 
-                        {
-                            cli->c[i].equi = 'b';
-                        } 
-                        else 
-                        {
-                            JOG[0][cli->c[i].jog].humano = 0;
-                            cli->c[i].jog = -1;
-                            cli->c[i].equi = 'b';
-                        }
-                    } 
-                    else 
-                    {
-                        //printf("\nvou deixar de ser desta equi\n");
-                        if (cli->c[i].jog == -1) 
-                        {
-                            cli->c[i].equi = '-';
-                        } 
-                        else 
-                        {
-                            JOG[1][cli->c[i].jog].humano = 0;
-                            cli->c[i].jog = -1;
-                            cli->c[i].equi = '-';
-                        }
-                    }
+                    }                    
                     break;
                 }
             }
@@ -1172,7 +1121,7 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
         case 'l':
 
             for (i = 0; i < cli->tam; i++) {
-                if (cli->c[i].id = cliente->id) {
+                if (cli->c[i].id == cliente->id) {
                     break;
                 }
             }
@@ -1238,7 +1187,7 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
 
         case 'r':
             for (i = 0; i < cli->tam; i++) {
-                if (cli->c[i].id = cliente->id) {
+                if (cli->c[i].id == cliente->id) {
                     break;
                 }
             }
