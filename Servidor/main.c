@@ -1344,7 +1344,7 @@ void * Func_receber_cliente(void * dados) {
 
     char temp_user[80], temp_pass[80];
     int a;
-    while (!resultados.fim) {
+    while (!sair) {
 
         fd = open(FIFO, O_RDONLY);
 
@@ -1430,10 +1430,12 @@ void * Func_receber_cliente(void * dados) {
             //printf("\nstr: %s \n", str);
 
             write(fd_resp, &j, sizeof (serv_clie));
-            sleep(1);
-            inicializacao_campo(str);
-
             close(fd_resp);
+
+            sleep(1);
+            if(!resultados.fim)
+                inicializacao_campo(str);
+
 
             fclose(f);
         } else if (cliente.flag_desliga) {
@@ -1586,10 +1588,30 @@ int main(int argc, char** argv) {//TODO:
 
     pthread_create(&receber_cliente, NULL, &Func_receber_cliente, NULL);
     
+    
     tarefa=(pthread_t*)malloc(sizeof(pthread_t)*2);
     
+    if(tarefa==NULL)
+    {
+        printf("Nao foi possivel alocar memoria\n");
+        return 0;
+    }
+    
     tarefa[0]=(pthread_t*)malloc(sizeof(pthread_t)*total);
+    
+    if(tarefa[0]==NULL)
+    {
+        printf("Nao foi possivel alocar memoria\n");
+        return 0;
+    }
+    
     tarefa[1]=(pthread_t*)malloc(sizeof(pthread_t)*total);
+    
+    if(tarefa[1]==NULL)
+    {
+        printf("Nao foi possivel alocar memoria\n");
+        return 0;
+    }
 
     int z = mkfifo(FIFO, 0600);
 
