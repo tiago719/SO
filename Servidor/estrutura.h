@@ -16,7 +16,6 @@ typedef struct {
     int res_eq2;
     int fim;
     int tempo;
-    int ativo;
 } RESULTADOS;
 
 typedef struct {
