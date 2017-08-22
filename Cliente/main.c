@@ -73,7 +73,7 @@ void *recebe(void * dados) {
     int * flag_log = (int *) dados;
 
     int i, fd;
-    char str[80];
+    char str[80], vencedor;
     serv_clie jogada, ant;
 
 
@@ -91,9 +91,26 @@ void *recebe(void * dados) {
                 //printf("\nVou meter a flag a 1\n");
                 *flag_log = 1;
             }
-            if (jogada.flag_campo) {
+            if (jogada.flag_campo) 
+            {
                 //printf("Cheguei ao atualiza campo");
 
+                if(jogada.resultados.fim==1)
+                {
+                    clear();
+                    if(jogada.resultados.res_eq1==jogada.resultados.res_eq2)
+                    {
+                        printf("O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                    }
+                    else
+                    {
+                        if(jogada.resultados.res_eq1>jogada.resultados.res_eq2)
+                            vencedor='a';
+                        else
+                            vencedor='b';
+                        printf("O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                    }
+                }
                 if (jogada.resultados.res_eq1 != ant.resultados.res_eq1
                         || jogada.resultados.res_eq2 != ant.resultados.res_eq2) {
                     clear();
