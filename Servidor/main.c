@@ -58,8 +58,28 @@ int Ndefesa, Navanc, sair = 0;
 pthread_t jogo, tempo, tarefa_bola; 
 pthread_t tarefa[2][9];
 
+int isOcupado(int x, int y)
+{
+    int a,i;
+    
+    for(a=0;a<2;a++)
+    {
+        for(i=0;i<total;i++)
+        {
+            if(JOG[a][i].posicao.x==x && JOG[a][i].posicao.y==y)
+            {
+                return 1;
+            }
+        }
+    }
+    if(ball.x==x && ball.y==y)
+        return 1;
+    
+    return 0;
+}
+
 void atualiza_campo(serv_clie * j) {
-    int i, fd, cont = 0;
+    int i, fd;
 
     for (i = 0; i < clientes.tam; i++) {
         if (clientes.c[i].logado) {
@@ -69,7 +89,7 @@ void atualiza_campo(serv_clie * j) {
             j->flag_campo = 1;
             j->flag_logado = 1;
             j->resultados = resultados;
-            int a = write(fd, j, sizeof (serv_clie));
+            write(fd, j, sizeof (serv_clie));
 
             //printf("\n{Servidor} Dados enviados para o cliente %d.\n" "Tamanho pretendido: %d Tamanho enviado: %d \n Jogador enviado: %c", clientes.c[i].id, sizeof (serv_clie), a, j->jogador);
             close(fd);
@@ -80,15 +100,8 @@ void atualiza_campo(serv_clie * j) {
 void inicializacao_campo(char * str) {
     int i;
     serv_clie j;
-    j.xnovo=JOG[0][0].posicao.x;
-        j.ynovo=JOG[0][0].posicao.y;
-        j.xant=JOG[0][0].posicao.x;
-        j.yant=JOG[0][0].posicao.y;
-        j.jogador='0'+(JOG[0][0].num);
-        j.equipa=JOG[0][0].equi;
-        
-        atualiza_campo(&j);
-    /*for(i=0;i<total;i++)
+    
+    for(i=0;i<total;i++)
     {
         j.xnovo=JOG[0][i].posicao.x;
         j.ynovo=JOG[0][i].posicao.y;
@@ -97,6 +110,8 @@ void inicializacao_campo(char * str) {
         j.jogador='0'+(JOG[0][i].num);
         j.equipa=JOG[0][i].equi;
         
+        usleep(100000);
+
         atualiza_campo(&j);
         usleep(100);
         
@@ -118,45 +133,7 @@ void inicializacao_campo(char * str) {
     j.jogador = 'o';
     j.equipa='n';
     atualiza_campo(&j);
-    usleep(100);*/
-
-/*
-    for (i = 0; i < total; i++) {
-        j.xnovo = JOG[0][i].ele[cont].x;
-        j.ynovo = ele[cont].y;
-        j.xant = ele[cont].x;
-        j.yant = ele[cont].y;
-        j.jogador = '0' + (JOG[0][i].num);
-        j.equipa='a';
-
-        cont++;
-        atualiza_campo(&j);
-        usleep(100);
-
-    }
-    for (i = 0; i < total; i++) {
-        j.xnovo = ele[cont].x;
-        j.ynovo = ele[cont].y;
-        j.xant = ele[cont].x;
-        j.yant = ele[cont].y;
-        j.jogador = '0' + (JOG[1][i].num);
-        j.equipa='b';
-
-        cont++;
-        atualiza_campo(&j);
-        usleep(100);
-
-
-    }
-    j.xnovo = ele[cont].x;
-    j.ynovo = ele[cont].y;
-    j.xant = ele[cont].x;
-    j.yant = ele[cont].y;
-    j.jogador = 'o';
-    j.equipa='n';
-    atualiza_campo(&j);
     usleep(100);
- * */
 }
 
 void inicializaJog(){
@@ -388,138 +365,6 @@ void inicializaJog(){
     ball.y=26;
 }
 
-/*void montaCampo(){
-    int i;
-    ele[0].x = 11;
-    ele[0].y = 1;
-    ele[total].x = 11;
-    ele[total].y = 50;
-
-    i = 1;
-
-    switch (Ndefesa) {
-        case 1:
-            ele[i].x = 11;
-            ele[i].y = 7;
-            ele[i + total].x = 11;
-            ele[i + total].y = 44;
-            break;
-        case 2:
-            ele[i].x = 5;
-            ele[i].y = 7;
-            ele[i + total].x = 5;
-            ele[i + total].y = 44;
-            i++;
-            ele[i].x = 16;
-            ele[i].y = 7;
-            ele[i + total].x = 16;
-            ele[i + total].y = 44;
-
-            break;
-        case 3:
-            ele[i].x = 5;
-            ele[i].y = 7;
-            ele[i + total].x = 5;
-            ele[i + total].y = 44;
-            i++;
-            ele[i].x = 16;
-            ele[i].y = 7;
-            ele[i + total].x = 16;
-            ele[i + total].y = 44;
-            i++;
-            ele[i].x = 11;
-            ele[i].y = 9;
-            ele[i + total].x = 11;
-            ele[i + total].y = 42;
-            break;
-        case 4:
-            ele[i].x = 5;
-            ele[i].y = 7;
-            ele[i + total].x = 5;
-            ele[i + total].y = 44;
-            i++;
-            ele[i].x = 16;
-            ele[i].y = 7;
-            ele[i + total].x = 16;
-            ele[i + total].y = 44;
-            i++;
-            ele[i].x = 5;
-            ele[i].y = 9;
-            ele[i + total].x = 5;
-            ele[i + total].y = 42;
-            i++;
-            ele[i].x = 16;
-            ele[i].y = 9;
-            ele[i + total].x = 16;
-            ele[i + total].y = 42;
-            break;
-
-    }
-
-    i++;
-    switch (Navanc) {
-        case 1:
-            ele[i].x = 11;
-            ele[i].y = 22;
-            ele[i + 10].x = 11;
-            ele[i + 10].y = 29;
-            break;
-        case 2:
-            ele[i].x = 6;
-            ele[i].y = 22;
-            ele[i + 10].x = 6;
-            ele[i + 10].y = 29;
-            i++;
-            ele[i].x = 17;
-            ele[i].y = 22;
-            ele[i + 10].x = 17;
-            ele[i + 10].y = 29;
-            break;
-        case 3:
-            ele[i].x = 6;
-            ele[i].y = 22;
-            ele[i + 10].x = 6;
-            ele[i + 10].y = 29;
-            i++;
-            ele[i].x = 17;
-            ele[i].y = 22;
-            ele[i + 10].x = 17;
-            ele[i + 10].y = 29;
-            i++;
-            ele[Ndefesa + 3 + 1].x = 11;
-            ele[Ndefesa + 3 + 1].y = 24;
-            ele[i + 10].x = 11;
-            ele[i + 10].y = 27;
-            break;
-        case 4:
-            ele[i].y = 24;
-            ele[i].x = 9;
-            ele[i + total].x = 9;
-            ele[i + total].y = 27;
-            i++;
-            ele[i].x = 12;
-            ele[i].y = 24;
-            ele[i + total].x = 12;
-            ele[i + total].y = 27;
-            i++;
-            ele[i].x = 6;
-            ele[i].y = 22;
-            ele[i + total].x = 6;
-            ele[i + total].y = 29;
-            i++;
-            ele[i].x = 15;
-            ele[i].y = 22;
-            ele[i + total].x = 15;
-            ele[i + total].y = 29;
-            break;
-
-    }
-    i++;
-    ele[i * 2].x = 11; //bola
-    ele[i * 2].y = 26;
-}
- * */
-
 void golo() {
     int x = ball.x, y = ball.y;
     if ((y <= 0 || y >= 50) && (x > 5 && x < 14)) {
@@ -641,56 +486,13 @@ void * bola(void * dados) {
                         break;
                     }
                 }
-            }
-            /*for (i = 0; i < (total)*2; i++) 
-            {
-                if (JOGele[i].x == ele[total * 2].x && ele[i].y == ele[total * 2].y) 
-                {
-                    if (i > total) 
-                    {
-                        temp = &JOG[1][i - total];
-                    } else 
-                    {
-                        temp = &JOG[0][i];
-                    }
-                    posse_bola = temp;
-                    break;
-                }
-            }*/
+            }            
             //golo(ele[total * 2].x, ele[total * 2].y);
         }
-
         usleep(100);
     }
+    pthread_exit(0);
 }
-
-//int diferenca(int jog) {
-//    if (jog > Ndefesa) 
-//    {
-//        if(jog<15)
-//        {
-//            if (Ndefesa == 4)
-//            return 1;
-//        else if (Ndefesa == 3)
-//            return 2;
-//        else if (Ndefesa == 2)
-//            return 3;
-//        else
-//            return 4;
-//        }
-//        else
-//        {
-//            if (Ndefesa == 4)
-//            return 2;
-//        else if (Ndefesa == 3)
-//            return 3;
-//        else if (Ndefesa == 2)
-//            return 4;
-//        else
-//            return 5;
-//        }
-//    }
-//}
 
 void * move_jogador(void * dados) {
     int i, a;
@@ -731,36 +533,12 @@ void * move_jogador(void * dados) {
             
             if (jog->posicao.y + d.y >= 0 && jog->posicao.y + d.y < MaxY &&
                     jog->posicao.x + d.x >= 0 && jog->posicao.x + d.x < MaxX) {
-                int ye = 1;
-                for(a=0;a<2;a++)
-                {
-                    for(i=0;i<total;i++)
-                    {
-                        if(JOG[a][i].posicao.x==jog->posicao.x+d.x && JOG[a][i].posicao.y==jog->posicao.y+d.y)
-                        {
-                            ye=0;
-                            break;
-                        }
-                    }
-                }
-                /*
-                for (i = 0; i < (total)*2; i++) {
-                    if (ele[i].x == jog->posicao->x + d.x &&
-                            ele[i].y == jog->posicao->y + d.y) {
-                        ye = 0;
-                        break;
-                    }
-
-                }*/
-                if (!ye) {
+               
+                if(isOcupado(jog->posicao.x+d.x, jog->posicao.x+d.x))
                     continue;
-                }
 
                 j.jogador = '0' + jog->num;
-                if(jog->equi=='a')
-                    j.equipa='a';
-                else 
-                    j.equipa='b';
+                j.equipa=jog->equi;
 
                 j.xant = jog->posicao.x;
                 j.yant = jog->posicao.y;
@@ -879,11 +657,8 @@ void * move_jogador(void * dados) {
             //pthread_mutex_t_unlock(&trinco);
         }
         usleep(jog->tempo);
-
-
     }
     pthread_exit(0);
-
 }
 
 void * move_redes(void * dados) {
@@ -912,69 +687,29 @@ void * move_redes(void * dados) {
             }
             if(jog->posicao.x + d.x >= limInfXRedes && jog->posicao.x + d.x <= limSupXRedes)
             {
-                for(a=0;a<2;a++)
-                {
-                    for(i=0;i<total;i++)
-                    {
-                        if(JOG[a][i].posicao.x==jog->posicao.x+d.x && JOG[a][i].posicao.y==jog->posicao.y+d.y)
-                        {
-                            ye=0;
-                            break;
-                        }
-                    }
-                }
-                
-                if(!ye)
+                if(isOcupado(jog->posicao.x+d.x, jog->posicao.x+d.y))
                     continue;
+            }
                 
-                j.xant = jog->posicao.x;
-                j.yant = jog->posicao.y;
+            j.xant = jog->posicao.x;
+            j.yant = jog->posicao.y;
 
-                jog->posicao.y += d.y;
-                jog->posicao.x += d.x;
+            jog->posicao.y += d.y;
+            jog->posicao.x += d.x;
 
-                j.xnovo = jog->posicao.x;
-                j.ynovo = jog->posicao.y;
+            j.xnovo = jog->posicao.x;
+            j.ynovo = jog->posicao.y;
 
-                j.jogador = '0' + jog->num ; 
-                
-                if(jog->equi=='a')
-                    j.equipa='a';
-                else 
-                    j.equipa='b';
-            }    
+            j.jogador = '0' + jog->num ; 
+            j.equipa=jog->equi;
             //pthread_mutex_t_unlock(&trinco);
             atualiza_campo(&j);
             
-            /*
-            if (ele[jog->num].y < ele[0].y) 
-            {
-                d.y++;
-            } 
-            else 
-            {
-                d.y--;
-            }
-
-            if (ele[jog->num].x < ele[0].x) 
-            {
-                d.x++;
-            } else 
-            {
-                d.x--;
-            }
-            int area_min = 0, area_max = 7;
-            //if (jog->num == 1)printf(" %d\n", ele[jog->num].x);
-            if (jog->num == 2) 
-            {
-                area_min = 44;
-                area_max = 51;
-            }*/
-        }
-        usleep(jog->tempo);
-    } 
+        }    
+        usleep(jog->tempo);    
+    }
     pthread_exit(0);
-}
+} 
 
 JOGADOR * procuraJogador(char equi, int op){
     int i, eq;
@@ -1705,8 +1440,6 @@ void * Func_receber_cliente(void * dados) {
     pthread_exit(0);
 }
 
-//TODO: cli->c[i]->logado SE JA ESTIVER LOGADO O QUE FAZER....a
-
 void comecaJogo()
 {
     int i;
@@ -1715,14 +1448,14 @@ void comecaJogo()
     resultados.res_eq2 = 0;
     resultados.fim = 0;
 
-    //pthread_create(&tarefa_bola, NULL, &bola, NULL);
-    //pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
+    pthread_create(&tarefa_bola, NULL, &bola, NULL);
+    pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
     //pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
 
-    /*for (i = 1; i < total; i++) {
+    for (i = 1; i < total; i++) {
         pthread_create(&tarefa[0][i], NULL, &move_jogador, (void *) &JOG[0][i]);
         pthread_create(&tarefa[1][i], NULL, &move_jogador, (void *) &JOG[1][i]);
-    }*/
+    }
 }
 
 void acabaJogo()
