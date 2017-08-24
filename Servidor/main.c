@@ -30,7 +30,7 @@ typedef struct {
 ;
 typedef struct {
     char fim, humano, equi;
-    int tempo, num, x, y, posse_bola;
+    int tempo, num, posse_bola;
     int precisao_remate;
     POSICAO posicao;
 } JOGADOR;
@@ -80,8 +80,15 @@ void atualiza_campo(serv_clie * j) {
 void inicializacao_campo(char * str) {
     int i;
     serv_clie j;
-    
-    for(i=0;i<total;i++)
+    j.xnovo=JOG[0][0].posicao.x;
+        j.ynovo=JOG[0][0].posicao.y;
+        j.xant=JOG[0][0].posicao.x;
+        j.yant=JOG[0][0].posicao.y;
+        j.jogador='0'+(JOG[0][0].num);
+        j.equipa=JOG[0][0].equi;
+        
+        atualiza_campo(&j);
+    /*for(i=0;i<total;i++)
     {
         j.xnovo=JOG[0][i].posicao.x;
         j.ynovo=JOG[0][i].posicao.y;
@@ -111,7 +118,7 @@ void inicializacao_campo(char * str) {
     j.jogador = 'o';
     j.equipa='n';
     atualiza_campo(&j);
-    usleep(100);
+    usleep(100);*/
 
 /*
     for (i = 0; i < total; i++) {
@@ -153,7 +160,7 @@ void inicializacao_campo(char * str) {
 }
 
 void inicializaJog(){
-    int cont=0, i;
+    int cont=0, i, temp;
     
     //INICIAOLIZACAO REDES
     JOG[0][0].fim = 0;
@@ -172,7 +179,7 @@ void inicializaJog(){
     JOG[1][0].tempo = 300000;
     JOG[1][0].equi='b';
     JOG[1][0].posicao.x=11;
-    JOG[1][0].posicao.x=50;
+    JOG[1][0].posicao.y=50;
 
         
     cont++;
@@ -193,6 +200,8 @@ void inicializaJog(){
         JOG[1][i].precisao_remate = 80;
         JOG[1][i].tempo = 400000;
         JOG[1][i].equi='b';
+        
+        cont++;
     }
     
     i=1;
@@ -203,6 +212,8 @@ void inicializaJog(){
             JOG[0][i].posicao.y=7;
             JOG[1][i].posicao.x=11;
             JOG[1][i].posicao.y=44;
+            
+            i++;
             break;
         case 2:
             JOG[0][i].posicao.x=5;
@@ -216,6 +227,8 @@ void inicializaJog(){
             JOG[0][i].posicao.y=7;
             JOG[1][i].posicao.x=16;
             JOG[1][i].posicao.y=44;
+            
+            i++;
             break;
         case 3:
             JOG[0][i].posicao.x=5;
@@ -236,6 +249,8 @@ void inicializaJog(){
             JOG[0][i].posicao.y=9;
             JOG[1][i].posicao.x=11;
             JOG[1][i].posicao.y=42;
+            
+            i++;
             break;
         case 4:
             JOG[0][i].posicao.x=5;
@@ -263,12 +278,14 @@ void inicializaJog(){
             JOG[0][i].posicao.y=9;
             JOG[1][i].posicao.x=16;
             JOG[1][i].posicao.y=42;
+            
+            i++;
             break;       
     }
     
     //---------------------
     //INICIAOLIZACAO AVANC
-
+    temp=i;
     cont = 6;
     for (; i < total; i++) {
         JOG[0][i].fim = 0;
@@ -287,7 +304,7 @@ void inicializaJog(){
         
         cont++;
     }
-    
+    i=temp;
     switch(Navanc)
     {
         case 1:
@@ -295,6 +312,8 @@ void inicializaJog(){
             JOG[0][i].posicao.y=22;
             JOG[1][i].posicao.x=11;
             JOG[1][i].posicao.y=29;
+            
+            i++;
             break;
         case 2:
             JOG[0][i].posicao.x=6;
@@ -308,6 +327,8 @@ void inicializaJog(){
             JOG[0][i].posicao.y=22;
             JOG[1][i].posicao.x=17;
             JOG[1][i].posicao.y=29;
+            
+            i++;
             break;
         case 3:
             JOG[0][i].posicao.x=6;
@@ -328,6 +349,8 @@ void inicializaJog(){
             JOG[0][i].posicao.y=24;
             JOG[1][i].posicao.x=11;
             JOG[1][i].posicao.y=27;
+            
+            i++;
             break;
         case 4:
             JOG[0][i].posicao.x=24;
@@ -355,6 +378,8 @@ void inicializaJog(){
             JOG[0][i].posicao.y=22;
             JOG[1][i].posicao.x=15;
             JOG[1][i].posicao.y=29;
+            
+            i++;
             break;       
     }
     //--------------------- 
@@ -1690,11 +1715,11 @@ void comecaJogo()
     resultados.res_eq2 = 0;
     resultados.fim = 0;
 
-    /*pthread_create(&tarefa_bola, NULL, &bola, NULL);
-    pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
-    pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
+    //pthread_create(&tarefa_bola, NULL, &bola, NULL);
+    //pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
+    //pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
 
-    for (i = 1; i < total; i++) {
+    /*for (i = 1; i < total; i++) {
         pthread_create(&tarefa[0][i], NULL, &move_jogador, (void *) &JOG[0][i]);
         pthread_create(&tarefa[1][i], NULL, &move_jogador, (void *) &JOG[1][i]);
     }*/
