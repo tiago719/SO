@@ -43,20 +43,25 @@ POSICAO ball;
 pthread_mutex_t trinco;
 JOGADOR ** JOG;
 JOGADOR * posse_bola;
-int total;
+int TOTAL;
 CLIENTES clientes;
 RESULTADOS resultados;
 int Ndefesa, Navanc, sair = 0;
 pthread_t jogo, tempo, tarefa_bola; 
 pthread_t tarefa[2][9];
 
+/*
+ * 0 - NAO OCUPADO
+ * 1 - OCUPADO
+ * 2 - OCUPADO POR BOLA
+ */
 int isOcupado(int x, int y)
 {
     int a,i;
     
     for(a=0;a<2;a++)
     {
-        for(i=0;i<total;i++)
+        for(i=0;i<TOTAL;i++)
         {
             if(JOG[a][i].posicao.x==x && JOG[a][i].posicao.y==y)
             {
@@ -65,9 +70,14 @@ int isOcupado(int x, int y)
         }
     }
     if(ball.x==x && ball.y==y)
-        return 1;
+        return 2;
     
     return 0;
+}
+
+void BolaParaMeio(){
+    ball.x=11;
+    ball.y=26;
 }
 
 void atualiza_campo(serv_clie * j) {
@@ -93,7 +103,7 @@ void inicializacao_campo(char * str) {
     int i;
     serv_clie j;
     
-    for(i=0;i<total;i++)
+    for(i=0;i<TOTAL;i++)
     {
         j.xnovo=JOG[0][i].posicao.x;
         j.ynovo=JOG[0][i].posicao.y;
@@ -128,7 +138,7 @@ void inicializacao_campo(char * str) {
     usleep(100);
 }
 
-void inicializaJog(){
+void inicializaJogadores(){
     int cont=0, i, temp;
     
     //INICIAOLIZACAO REDES
@@ -256,7 +266,7 @@ void inicializaJog(){
     //INICIAOLIZACAO AVANC
     temp=i;
     cont = 6;
-    for (; i < total; i++) {
+    for (; i < TOTAL; i++) {
         JOG[0][i].fim = 0;
         JOG[0][i].humano = 0;
         JOG[0][i].num = cont;
@@ -353,8 +363,7 @@ void inicializaJog(){
     }
     //--------------------- 
     
-    ball.x=11;
-    ball.y=26;
+    BolaParaMeio();
 }
 
 void golo() {
@@ -369,19 +378,20 @@ void golo() {
         //montaCampo();
         int i;
         char str[80];
-        serv_clie j;
-        j.flag_campo = 1;
-        j.xant = 99;
-        j.xnovo = 99;
-        j.yant = 99;
-        j.ynovo = 99;
+//        serv_clie j;
+//        j.flag_campo = 1;
+//        j.xant = 99;
+//        j.xnovo = 99;
+//        j.yant = 99;
+//        j.ynovo = 99;
         posse_bola = NULL;
+        BolaParaMeio();
         
         //montaCampo();
 //        ele[total * 2].x = 11; //bola
 //        ele[total * 2].y = 26;
-        atualiza_campo(&j);
-        sleep(1);
+//        atualiza_campo(&j);
+//        sleep(1);
 
         for (i = 0; i < clientes.tam; i++) {
             clientes.c[i].jogador = NULL;
@@ -442,9 +452,11 @@ void * bola(void * dados) {
         if (posse_bola != NULL) {
             if (posse_bola->equi == 'a') {
                 j.jogador = 'o' + 1;
+                ball.y = posse_bola->posicao.y + 1;
 
             } else {
                 j.jogador = 'o' + 2;
+                ball.y = posse_bola->posicao.y - 1;
 
             }
             //            j.jogador = 'o';
@@ -452,12 +464,12 @@ void * bola(void * dados) {
             j.xant = ball.x;
             j.yant = ball.y;
             
-            if (posse_bola->equi == 'a') {
-                ball.y = posse_bola->posicao.y - 1;
-
-            } else {
-                ball.y = posse_bola->posicao.y + 1;
-            }
+//            if (posse_bola->equi == 'a') {
+//                ball.y = posse_bola->posicao.y - 1;
+//
+//            } else {
+//                ball.y = posse_bola->posicao.y + 1;
+//            }
             ball.x = posse_bola->posicao.x;
             j.ynovo = ball.y;
             j.xnovo = ball.x;
@@ -470,7 +482,7 @@ void * bola(void * dados) {
 
             for(a=0;a<2;a++)
             {
-                for(i=0;i<total;i++)
+                for(i=0;i<TOTAL;i++)
                 {
                     if(JOG[a][i].posicao.x==ball.x && JOG[a][i].posicao.y==ball.y)
                     {
@@ -498,7 +510,7 @@ void * move_jogador(void * dados) {
     int num = 0;
 
     if (jog->equi == 'b')
-        num = total;
+        num = TOTAL;
 
      while (!resultados.fim)
      {
@@ -526,7 +538,7 @@ void * move_jogador(void * dados) {
             if (jog->posicao.y + d.y >= 0 && jog->posicao.y + d.y < MaxY &&
                     jog->posicao.x + d.x >= 0 && jog->posicao.x + d.x < MaxX) {
                
-                if(isOcupado(jog->posicao.x+d.x, jog->posicao.x+d.x))
+                if(isOcupado(jog->posicao.x+d.x, jog->posicao.x+d.x) == 1)
                     continue;
 
                 j.jogador = '0' + jog->num;
@@ -679,7 +691,7 @@ void * move_redes(void * dados) {
             }
             if(jog->posicao.x + d.x >= limInfXRedes && jog->posicao.x + d.x <= limSupXRedes)
             {
-                if(isOcupado(jog->posicao.x+d.x, jog->posicao.x+d.y))
+                if(isOcupado(jog->posicao.x+d.x, jog->posicao.x+d.y) == 1)
                     continue;
             }
                 
@@ -712,7 +724,7 @@ JOGADOR * procuraJogador(char equi, int op){
     else 
         return NULL;
     
-    for (i = 0; i< total; i++){
+    for (i = 0; i< TOTAL; i++){
         if (JOG[eq][i].num == op)
             return &JOG[eq][i];
     }
@@ -732,7 +744,7 @@ void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
         {
             //printf("\nENcontreime no meio dos clientes\n");
             if (cli->c[i].equi != '-') 
-            {              
+            {
                 if(cli->c[i].jogador==NULL)
                 {
                     aux=procuraJogador(cli->c[i].equi, cam);
@@ -748,7 +760,7 @@ void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
                     }
                     if(flag==0)
                     {
-                        cli->c[i].jogador=procuraJogador(cli->c[i].equi,cam);
+                        cli->c[i].jogador=aux;
                         cli->c[i].jogador->humano=1;
                     }
                 }
@@ -801,7 +813,7 @@ void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
 }
 
 void controlaJogador(int op, CLIENTE * cliente){
-    int xSum=0, ySum=0, i,a,b, maxXJog=MaxX, minXJog=0, ye;
+    int xSum=0, ySum=0, a,b, maxXJog=MaxX, minXJog=0, ye;
     serv_clie j;
     
     switch (op){
@@ -822,7 +834,7 @@ void controlaJogador(int op, CLIENTE * cliente){
     if (cliente->jogador == NULL)
         return;
     
-    if(cliente->jogador->num==0)
+    if(cliente->jogador->num==0)//se redes
     {
         ySum=0;
         maxXJog=limSupXRedes;
@@ -832,27 +844,18 @@ void controlaJogador(int op, CLIENTE * cliente){
     xSum += cliente->jogador->posicao.x;
     ySum += cliente->jogador->posicao.y;
     
-    if (xSum < minXJog|| xSum > maxXJog || ySum < 0 || ySum > MaxY)
+    if (xSum < minXJog || xSum > maxXJog || ySum < 0 || ySum > MaxY)
         return;
-    
-                for(a=0;a<2;a++)
-                {
-                    for(b=0;b<total;b++)
-                    {
-                        if(JOG[a][b].posicao.x==xSum && JOG[a][b].posicao.y==ySum)
-                        {
-                            ye=0;
-                            break;
-                        }
-                    }                    
-                    if(!ye)
-                        continue;
-                }
-
-    if (i==(total * 2))
-        posse_bola = cliente->jogador;
-    else if (i != (total * 2) + 2)
-        return;
+        
+    switch(isOcupado(xSum, ySum)){
+        case 1:
+            return;
+        case 2:
+            posse_bola = cliente->jogador;
+            break;
+        default:
+            break;
+    }
     
     j.xant = cliente->jogador->posicao.x;
     j.yant = cliente->jogador->posicao.y;
@@ -1441,20 +1444,20 @@ void comecaJogo()
     resultados.fim = 0;
 
     pthread_create(&tarefa_bola, NULL, &bola, NULL);
-    pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
-    //pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
-
-    for (i = 1; i < total; i++) {
-        pthread_create(&tarefa[0][i], NULL, &move_jogador, (void *) &JOG[0][i]);
-        pthread_create(&tarefa[1][i], NULL, &move_jogador, (void *) &JOG[1][i]);
-    }
+//    pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
+//    pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
+//
+//    for (i = 1; i < TOTAL; i++) {
+//        pthread_create(&tarefa[0][i], NULL, &move_jogador, (void *) &JOG[0][i]);
+//        pthread_create(&tarefa[1][i], NULL, &move_jogador, (void *) &JOG[1][i]);
+//    }
 }
 
 void acabaJogo()
 {
     resultados.fim = 1;
     int i;
-    for (i = 0; i < total; i++) {
+    for (i = 0; i < TOTAL; i++) {
         pthread_join(tarefa[0][i], NULL);
         pthread_join(tarefa[1][i], NULL);
     }
@@ -1514,8 +1517,9 @@ int main(int argc, char** argv) {//TODO:
     srand((unsigned int) time(NULL));
     signal(SIGINT, SIG_IGN);
 
-    signal(SIGINT, acabar_jogo);
-    signal(SIGALRM, acabar_jogo);
+    signal(SIGINT, acabar_jogo);//TODO: NAO ESTA A FUNCIONAR (ACHO)
+    signal(SIGALRM, acabar_jogo);//TODO: NAO ESTA A FUNCIONAR (ACHO)
+    
     char *primeiro;
     char *segundo;
     FILE *f;
@@ -1535,15 +1539,15 @@ int main(int argc, char** argv) {//TODO:
     Ndefesa = 4;//TODO:alterar para VA
     Navanc = 4;//TODO:alterar para VA
 
-    total = (1 + Navanc + Ndefesa);
+    TOTAL = (1 + Navanc + Ndefesa);
     
     JOG = (JOGADOR **) malloc(sizeof (JOGADOR) * 2);
 
-    JOG[0] = (JOGADOR *) malloc(sizeof (JOGADOR) * total);
-    JOG[1] = (JOGADOR *) malloc(sizeof (JOGADOR) * total);
+    JOG[0] = (JOGADOR *) malloc(sizeof (JOGADOR) * TOTAL);
+    JOG[1] = (JOGADOR *) malloc(sizeof (JOGADOR) * TOTAL);
     
-    inicializaJog();
-    //montaCampo();
+    inicializaJogadores();
+//    montaCampo();
     
     /*if (access(FIFO, F_OK) == 0) {
         printf("Ja esta um servidor em execução\n");
