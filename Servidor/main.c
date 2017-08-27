@@ -19,7 +19,7 @@
 typedef struct {
     int y, x;
 } POSICAO;
-;
+
 typedef struct {
     char equi;
     int tempo, num, posse_bola, humano, fim, precisao_remate;
@@ -83,9 +83,23 @@ void atualiza_campo(serv_clie * j) {
     int i, fd;
 
     for (i = 0; i < clientes.tam; i++) {
-        if (clientes.c[i].logado) {
+        if (clientes.c[i].logado) 
+        {
             char str[80];
             sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
+            
+            if (access(str, F_OK) != 0)
+            {
+                resultados.numClientes--;
+                clientes.c[i].logado=0;
+                if(clientes.c[i].jogador!=NULL)
+                {
+                    clientes.c[i].jogador->humano=0;
+                    clientes.c[i].jogador=NULL;
+                }
+                clientes.c[i].equi='-';
+                continue;
+            }
             fd = open(str, O_WRONLY);
             j->flag_campo = 1;
             j->flag_logado = 1;
@@ -1449,14 +1463,14 @@ void comecaJogo()
     resultados.res_eq2 = 0;
     resultados.fim = 0;
 
-    pthread_create(&tarefa_bola, NULL, &bola, NULL);
+    //pthread_create(&tarefa_bola, NULL, &bola, NULL);
     pthread_create(&JOG[0][0].thread, NULL, &move_redes, (void *) &JOG[0][0]);
-    pthread_create(&JOG[1][0].thread, NULL, &move_redes, (void *) &JOG[1][0]);
+    /*pthread_create(&JOG[1][0].thread, NULL, &move_redes, (void *) &JOG[1][0]);
 
     for (i = 1; i < TOTAL; i++) {
         pthread_create(&JOG[0][i].thread, NULL, &move_jogador, (void *) &JOG[0][i]);
         pthread_create(&JOG[1][i].thread, NULL, &move_jogador, (void *) &JOG[1][i]);
-    }
+    }*/
 }
 
 void acabaJogo()
@@ -1526,6 +1540,30 @@ void acabar_jogo(int s) {
         exit(3);
 
     }
+}
+
+void shutdown()
+{
+    acabaJogo();
+    
+    int i;
+    char str[20];
+    
+    resultados.fim = 1;
+    pthread_join(tempo, NULL);
+    
+     for (i = 0; i < clientes.tam; i++) 
+     {
+        kill(clientes.c[i].id, SIGUSR1);
+        sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
+        unlink(str);
+     }
+                    
+    free(JOG[0]);
+    free(JOG[1]);
+    free(JOG);
+    
+    unlink(FIFO);
 }
 
 int main(int argc, char** argv) {//TODO:
@@ -1713,20 +1751,14 @@ int main(int argc, char** argv) {//TODO:
                 break;
 
             case 6://shutdown
-                acabaJogo();
-                for (i = 0; i < clientes.tam; i++) {
-                    kill(clientes.c[i].id, SIGUSR1);
-                }
+                shutdown();
                 sair = 1;
-                pthread_join(tempo, NULL);
                 break;
             default:
                 printf("\nComando Invalido!\n");
                 break;
-
         }
 
     } while (!sair);
-    //free(ele);//TODO:Ver se estes free estao bem
 }
 
