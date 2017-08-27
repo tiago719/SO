@@ -24,6 +24,7 @@ typedef struct {
     char fim, humano, equi;
     int tempo, num, posse_bola;
     int precisao_remate;
+    pthread_t thread;
     POSICAO posicao;
 } JOGADOR;
 
@@ -48,7 +49,6 @@ CLIENTES clientes;
 RESULTADOS resultados;
 int Ndefesa, Navanc, sair = 0;
 pthread_t jogo, tempo, tarefa_bola; 
-pthread_t tarefa[2][9];
 
 /*
  * 0 - NAO OCUPADO
@@ -1294,13 +1294,10 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
 void * Func_receber_cliente(void * dados) {
 
     clie_serv cliente;
-    char str[80], cmd[80];
-    int fd, fd_resp, i, r, rat;
+    char str[80];
+    int fd, fd_resp, i;
 
     serv_clie j;
-    FILE *f;
-    fd_set rfds;
-    struct timeval tv;
     j.flag_logado = 0;
     j.flag_campo = 0;
 
@@ -1337,6 +1334,7 @@ void * Func_receber_cliente(void * dados) {
             clientes.c[clientes.tam].logado = 0;
 
             clientes.tam++;
+            resultados.numClientes=clientes.tam;
 
         } else if (cliente.flag_log) {//logar
             FILE * f = fopen(clientes.nome_ficheiro, "rt");
@@ -1352,7 +1350,7 @@ void * Func_receber_cliente(void * dados) {
             //                    close(fd);
             //                    continue;
             //                } else {
-            int aux, t;
+            int aux=0, t;
             j.flag_logado = 0;
             j.flag_campo = 0;
 
@@ -1444,13 +1442,13 @@ void comecaJogo()
     resultados.fim = 0;
 
     pthread_create(&tarefa_bola, NULL, &bola, NULL);
-//    pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
-//    pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
-//
-//    for (i = 1; i < TOTAL; i++) {
-//        pthread_create(&tarefa[0][i], NULL, &move_jogador, (void *) &JOG[0][i]);
-//        pthread_create(&tarefa[1][i], NULL, &move_jogador, (void *) &JOG[1][i]);
-//    }
+    pthread_create(&JOG[0][0].thread, NULL, &move_redes, (void *) &JOG[0][0]);
+    pthread_create(&JOG[1][0].thread, NULL, &move_redes, (void *) &JOG[1][0]);
+
+    for (i = 1; i < TOTAL; i++) {
+        pthread_create(&JOG[0][i].thread, NULL, &move_jogador, (void *) &JOG[0][i]);
+        pthread_create(&JOG[1][i].thread, NULL, &move_jogador, (void *) &JOG[1][i]);
+    }
 }
 
 void acabaJogo()
@@ -1458,8 +1456,8 @@ void acabaJogo()
     resultados.fim = 1;
     int i;
     for (i = 0; i < TOTAL; i++) {
-        pthread_join(tarefa[0][i], NULL);
-        pthread_join(tarefa[1][i], NULL);
+        pthread_join(JOG[0][i].thread, NULL);
+        pthread_join(JOG[1][i].thread, NULL);
     }
    
     pthread_join(tarefa_bola, NULL);
@@ -1525,9 +1523,12 @@ int main(int argc, char** argv) {//TODO:
     FILE *f;
 
 
-    int i, cont = 0;
-    char tecla, cmd[80];
+    int i;
+    char cmd[80];
+    
+    clientes.tam=0;
     resultados.fim=1;
+    resultados.numClientes=clientes.tam;
     
     //    const char* AVndefesa = getenv("NDEFESAS");
     //    const char* AVnavanc = getenv("NAVANCADOS");
@@ -1553,26 +1554,12 @@ int main(int argc, char** argv) {//TODO:
         printf("Ja esta um servidor em execução\n");
         return 3;
     }*///TODO: Descomentar isto
-    clientes.tam=0;
     
     pthread_t receber_cliente;
 
     pthread_create(&receber_cliente, NULL, &Func_receber_cliente, NULL);
     
-    /*
-    tarefa=(pthread_t*)malloc(sizeof(pthread_t)*2);
-    
-    tarefa[0]=(pthread_t*)malloc(sizeof(pthread_t)*total);
-    
-    tarefa[1]=(pthread_t*)malloc(sizeof(pthread_t)*total);
-    
-    if(tarefa==NULL || tarefa[0]==NULL || tarefa[1]==NULL)
-    {
-        printf("Nao foi possivel alocar memoria\n");
-        return 0;
-    }*/
-
-    int z = mkfifo(FIFO, 0600);
+    mkfifo(FIFO, 0600);
 
     do {
         printf("\nComando: ");

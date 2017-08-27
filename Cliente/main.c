@@ -17,24 +17,8 @@
 #include <signal.h>
 #include "estrutura.h"
 
-void atualiza_campo(serv_clie * j) {
-
-    /*
-    if (j->jogador == 'o')
-        attron(COLOR_PAIR(3));
-    else if (j->equipa == 'a') {
-        attron(COLOR_PAIR(1));
-        j->jogador = 'o';
-    } else if (j->equipa=='b') {
-        attron(COLOR_PAIR(2));
-        j->jogador = 'o';
-    } else if (j->equipa=='b') {
-        attron(COLOR_PAIR(1));
-        j->jogador -= 10;
-    } else
-        attron(COLOR_PAIR(2));
-     * */
-    
+void atualiza_campo(serv_clie * j) 
+{  
     if(j->equipa=='a')
         attron(COLOR_PAIR(2));
     else if(j->equipa=='b')
@@ -48,6 +32,22 @@ void atualiza_campo(serv_clie * j) {
     mvaddch(j->xant, j->yant, ' ');
 
     mvaddch(j->xnovo, j->ynovo, j->jogador);
+    
+    attron(COLOR_PAIR(2));//TODO:meter a cor a 3
+    mvaddch(22,0,'T');
+    mvaddch(22,1,'e');
+    mvaddch(22,2,'m');
+    mvaddch(22,3,'p');
+    mvaddch(22,4,'o');
+    mvaddch(22,5,':');
+    if(j->resultados.tempo<9)
+        mvaddch(22, 6, '0' + j->resultados.tempo);
+    else
+    {
+        mvaddch(22, 7, '1');
+        mvaddch(22, 6, '0' + j->resultados.tempo%10);
+
+    }
 
     attron(COLOR_PAIR(2));
     mvaddch(22, 23, '0' + j->resultados.res_eq1);
@@ -55,6 +55,24 @@ void atualiza_campo(serv_clie * j) {
     mvaddch(22, 24, '-');
     attron(COLOR_PAIR(1));
     mvaddch(22, 25, '0' + j->resultados.res_eq2);
+    
+    attron(COLOR_PAIR(1));//TODO:meter a cor a 3
+    mvaddch(22,41,'C');
+    mvaddch(22,42,'l');
+    mvaddch(22,43,'i');
+    mvaddch(22,44,'e');
+    mvaddch(22,45,'n');
+    mvaddch(22,46,'t');
+    mvaddch(22,47,'e');
+    mvaddch(22,48,'s');
+    mvaddch(22,49,':');
+    if(j->resultados.numClientes<9)
+        mvaddch(22, 50, '0' + j->resultados.numClientes);
+    else
+    {
+        mvaddch(22, 50, '1');
+        mvaddch(22, 51, '0' + j->resultados.numClientes%10);
+    }
 
     refresh();
 }
