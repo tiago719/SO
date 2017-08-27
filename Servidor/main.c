@@ -1519,7 +1519,7 @@ void * contar_seg(void * dados) {
     resultados.fim = 1;
 }
 
-void acabar_jogo(int s) {
+void acabar_servidor(int s) {
     //if (s == SIGINT) {
     resultados.fim = 1;
     unlink(FIFO);
@@ -1575,9 +1575,9 @@ int main(int argc, char** argv) {//TODO:
     srand((unsigned int) time(NULL));
     signal(SIGINT, SIG_IGN);
 
-    signal(SIGINT, acabar_jogo); //TODO: NAO ESTA A FUNCIONAR (ACHO)
-    signal(SIGALRM, acabar_jogo); //TODO: NAO ESTA A FUNCIONAR (ACHO)
-
+    signal(SIGINT, acabar_servidor);//TODO: NAO ESTA A FUNCIONAR (ACHO)
+    signal(SIGALRM, acabar_servidor);//TODO: NAO ESTA A FUNCIONAR (ACHO), acho que nao fecha servidor, so acaba o jogo
+  
     char *primeiro;
     char *segundo;
     FILE *f;
