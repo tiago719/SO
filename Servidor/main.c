@@ -24,6 +24,7 @@ typedef struct {
     char fim, humano, equi;
     int tempo, num, posse_bola;
     int precisao_remate;
+    pthread_t thread;
     POSICAO posicao;
 } JOGADOR;
 
@@ -48,7 +49,6 @@ CLIENTES clientes;
 RESULTADOS resultados;
 int Ndefesa, Navanc, sair = 0;
 pthread_t jogo, tempo, tarefa_bola; 
-pthread_t tarefa[2][9];
 
 /*
  * 0 - NAO OCUPADO
@@ -1352,7 +1352,7 @@ void * Func_receber_cliente(void * dados) {
             //                    close(fd);
             //                    continue;
             //                } else {
-            int aux, t;
+            int aux=0, t;
             j.flag_logado = 0;
             j.flag_campo = 0;
 
@@ -1444,13 +1444,13 @@ void comecaJogo()
     resultados.fim = 0;
 
     pthread_create(&tarefa_bola, NULL, &bola, NULL);
-//    pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
-//    pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
-//
-//    for (i = 1; i < TOTAL; i++) {
-//        pthread_create(&tarefa[0][i], NULL, &move_jogador, (void *) &JOG[0][i]);
-//        pthread_create(&tarefa[1][i], NULL, &move_jogador, (void *) &JOG[1][i]);
-//    }
+    pthread_create(&JOG[0][0].thread, NULL, &move_redes, (void *) &JOG[0][0]);
+    pthread_create(&JOG[1][0].thread, NULL, &move_redes, (void *) &JOG[1][0]);
+
+    for (i = 1; i < TOTAL; i++) {
+        pthread_create(&JOG[0][i].thread, NULL, &move_jogador, (void *) &JOG[0][i]);
+        pthread_create(&JOG[1][i].thread, NULL, &move_jogador, (void *) &JOG[1][i]);
+    }
 }
 
 void acabaJogo()
@@ -1458,8 +1458,8 @@ void acabaJogo()
     resultados.fim = 1;
     int i;
     for (i = 0; i < TOTAL; i++) {
-        pthread_join(tarefa[0][i], NULL);
-        pthread_join(tarefa[1][i], NULL);
+        pthread_join(JOG[0][i].thread, NULL);
+        pthread_join(JOG[1][i].thread, NULL);
     }
    
     pthread_join(tarefa_bola, NULL);
@@ -1525,9 +1525,10 @@ int main(int argc, char** argv) {//TODO:
     FILE *f;
 
 
-    int i, cont = 0;
-    char tecla, cmd[80];
+    int i;
+    char cmd[80];
     resultados.fim=1;
+    resultados.numClientes=&clientes.tam;
     
     //    const char* AVndefesa = getenv("NDEFESAS");
     //    const char* AVnavanc = getenv("NAVANCADOS");
