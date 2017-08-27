@@ -33,7 +33,7 @@ void atualiza_campo(serv_clie * j)
 
     mvaddch(j->xnovo, j->ynovo, j->jogador);
     
-    attron(COLOR_PAIR(3));
+    attron(COLOR_PAIR(2));//TODO:meter a cor a 3
     mvaddch(22,0,'T');
     mvaddch(22,1,'e');
     mvaddch(22,2,'m');
@@ -56,7 +56,7 @@ void atualiza_campo(serv_clie * j)
     attron(COLOR_PAIR(1));
     mvaddch(22, 25, '0' + j->resultados.res_eq2);
     
-    attron(COLOR_PAIR(3));
+    attron(COLOR_PAIR(1));//TODO:meter a cor a 3
     mvaddch(22,41,'C');
     mvaddch(22,42,'l');
     mvaddch(22,43,'i');
@@ -66,12 +66,12 @@ void atualiza_campo(serv_clie * j)
     mvaddch(22,47,'e');
     mvaddch(22,48,'s');
     mvaddch(22,49,':');
-    if(*j->resultados.numClientes<9)
-        mvaddch(22, 50, '0' + *j->resultados.numClientes);
+    if(j->resultados.numClientes<9)
+        mvaddch(22, 50, '0' + j->resultados.numClientes);
     else
     {
         mvaddch(22, 50, '1');
-        mvaddch(22, 51, '0' + (*j->resultados.numClientes)%10);
+        mvaddch(22, 51, '0' + j->resultados.numClientes%10);
     }
 
     refresh();

@@ -16,7 +16,7 @@ typedef struct {
     int res_eq2;
     int fim;
     int tempo;
-    int *numClientes;
+    int numClientes;
 } RESULTADOS;
 
 typedef struct {

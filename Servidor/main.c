@@ -1294,13 +1294,10 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
 void * Func_receber_cliente(void * dados) {
 
     clie_serv cliente;
-    char str[80], cmd[80];
-    int fd, fd_resp, i, r, rat;
+    char str[80];
+    int fd, fd_resp, i;
 
     serv_clie j;
-    FILE *f;
-    fd_set rfds;
-    struct timeval tv;
     j.flag_logado = 0;
     j.flag_campo = 0;
 
@@ -1337,6 +1334,7 @@ void * Func_receber_cliente(void * dados) {
             clientes.c[clientes.tam].logado = 0;
 
             clientes.tam++;
+            resultados.numClientes=clientes.tam;
 
         } else if (cliente.flag_log) {//logar
             FILE * f = fopen(clientes.nome_ficheiro, "rt");
@@ -1527,8 +1525,10 @@ int main(int argc, char** argv) {//TODO:
 
     int i;
     char cmd[80];
+    
+    clientes.tam=0;
     resultados.fim=1;
-    resultados.numClientes=&clientes.tam;
+    resultados.numClientes=clientes.tam;
     
     //    const char* AVndefesa = getenv("NDEFESAS");
     //    const char* AVnavanc = getenv("NAVANCADOS");
@@ -1554,7 +1554,6 @@ int main(int argc, char** argv) {//TODO:
         printf("Ja esta um servidor em execução\n");
         return 3;
     }*///TODO: Descomentar isto
-    clientes.tam=0;
     
     pthread_t receber_cliente;
 
