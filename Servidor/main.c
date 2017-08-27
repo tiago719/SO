@@ -1559,20 +1559,7 @@ int main(int argc, char** argv) {//TODO:
 
     pthread_create(&receber_cliente, NULL, &Func_receber_cliente, NULL);
     
-    /*
-    tarefa=(pthread_t*)malloc(sizeof(pthread_t)*2);
-    
-    tarefa[0]=(pthread_t*)malloc(sizeof(pthread_t)*total);
-    
-    tarefa[1]=(pthread_t*)malloc(sizeof(pthread_t)*total);
-    
-    if(tarefa==NULL || tarefa[0]==NULL || tarefa[1]==NULL)
-    {
-        printf("Nao foi possivel alocar memoria\n");
-        return 0;
-    }*/
-
-    int z = mkfifo(FIFO, 0600);
+    mkfifo(FIFO, 0600);
 
     do {
         printf("\nComando: ");
