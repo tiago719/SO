@@ -128,14 +128,13 @@ void *recebe(void * dados) {
 
                 }
                 ant = jogada;
-            }//else if (jogada.flag_pedido) {
-            //TODO: qq coisa
-            //}
+            }
+            else if (jogada.flag_stop) 
+            {
+                clear();
+            }
 
-        } else {
-            //printf("\n{CLIENTE} Os dados recebidos do servidor nao tem o tamanho pretendido.\n"
-            //      "Tamanho pretendido: %d Tamanho recebido: %d \n", sizeof(serv_clie), i);
-        }
+        } 
         close(fd);
     } while (1);
 
@@ -241,10 +240,8 @@ void desconetar(int s) {
 void envia_comando() {
 
     int tecla;
-    struct timeval tv;
-    int ret, i, fd;
+    int i, fd;
     clie_serv p;
-    fd_set rfds;
 
     while (1) {
 
@@ -305,7 +302,7 @@ void envia_comando() {
                 p.op = 'h';
                 break;
         }
-        //printf("teclado");
+
         p.id = getpid();
         p.flag_operacao = 1;
         p.flag_con = 0;
@@ -316,24 +313,18 @@ void envia_comando() {
 
         i = write(fd, &p, sizeof (clie_serv));
         close(fd);
-        //}
-
-        //printf("enviei um pedido... %d bytes\n", i);
-
     }
 }
 
 int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
 
-    int maxX, maxY;
     signal(SIGINT, SIG_IGN);
 
     signal(SIGINT, desconetar);
     //    signal(SIGUSR1, diz);
 
-    int fd, i, res, fim = 0;
     clie_serv p;
-    pthread_t tarefa, log;
+    pthread_t tarefa;
     int flag_log = 0;
 
 

@@ -21,9 +21,8 @@ typedef struct {
 } POSICAO;
 ;
 typedef struct {
-    char fim, humano, equi;
-    int tempo, num, posse_bola;
-    int precisao_remate;
+    char equi;
+    int tempo, num, posse_bola, humano, fim, precisao_remate;
     pthread_t thread;
     POSICAO posicao;
 } JOGADOR;
@@ -99,7 +98,7 @@ void atualiza_campo(serv_clie * j) {
     }
 }
 
-void inicializacao_campo(char * str) {
+void inicializacao_campo() {
     int i;
     serv_clie j;
     
@@ -1334,7 +1333,6 @@ void * Func_receber_cliente(void * dados) {
             clientes.c[clientes.tam].logado = 0;
 
             clientes.tam++;
-            resultados.numClientes=clientes.tam;
 
         } else if (cliente.flag_log) {//logar
             FILE * f = fopen(clientes.nome_ficheiro, "rt");
@@ -1370,6 +1368,7 @@ void * Func_receber_cliente(void * dados) {
                             if (aux == 0) {
                                 clientes.c[i].logado = 1;
                                 j.flag_logado = 1;
+                                resultados.numClientes++;
                                 //printf("cliente %d logado %s\n", cliente.id, cliente.user);
                                 strcpy(clientes.c[i].username, temp_user);
                             }
@@ -1398,16 +1397,25 @@ void * Func_receber_cliente(void * dados) {
 
 
             fclose(f);
-        } else if (cliente.flag_desliga) {
-            //            printf("\ndesligado: olaoal\n");
-            for (i = 0; i < clientes.tam; i++) {
-                if (clientes.c[i].id == cliente.id) {
+        } 
+        else if (cliente.flag_desliga) 
+        {
+            for (i = 0; i < clientes.tam; i++) 
+            {
+                if (clientes.c[i].id == cliente.id) 
+                {
                     clientes.c[i].logado = 0;
                     strcpy(clientes.c[i].username, " ");
-                    //printf("\ndesligado: %d \n", cli->c[i].id);
-
+                    clientes.c[i].equi='-';
+                    if(clientes.c[i].jogador!=NULL)
+                    {
+                        clientes.c[i].jogador->humano=0;
+                        clientes.c[i].jogador=NULL;
+                    } 
+                    break;
                 }
             }
+            resultados.numClientes--;
         } else if (cliente.flag_operacao) {
             operacao(&cliente, &clientes);
 
@@ -1453,14 +1461,32 @@ void comecaJogo()
 
 void acabaJogo()
 {
+    int i, fd;
+    serv_clie j;
+    
     resultados.fim = 1;
-    int i;
     for (i = 0; i < TOTAL; i++) {
         pthread_join(JOG[0][i].thread, NULL);
         pthread_join(JOG[1][i].thread, NULL);
     }
    
     pthread_join(tarefa_bola, NULL);
+    
+    usleep(100);
+    
+    for(i=0;i<clientes.tam;i++)
+    {
+        if(clientes.c[i].logado)
+        {
+            char str[80];
+            sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
+            fd = open(str, O_WRONLY);
+            
+            j.flag_campo=0;
+            j.flag_logado=0;
+            j.flag_stop=1;
+        }
+    }
 }
 
 void * contar_seg(void * dados) {
@@ -1523,7 +1549,7 @@ int main(int argc, char** argv) {//TODO:
     FILE *f;
 
 
-    int i;
+    int i, flag=0;
     char cmd[80];
     
     clientes.tam=0;
@@ -1581,7 +1607,7 @@ int main(int argc, char** argv) {//TODO:
             case 0://START
                 primeiro = strtok(NULL, " "); // tempo
                 if (primeiro == NULL) {
-                    printf("\nErro de sintaxe start {n}\n");
+                    printf("\nErro de sintaxe: start {n}\n");
                     break;
 
                 }
@@ -1607,6 +1633,13 @@ int main(int argc, char** argv) {//TODO:
 
             case 2://USER
                 primeiro = strtok(NULL, " ");
+                segundo = strtok(NULL, " ");
+                
+                if(primeiro==NULL || segundo==NULL)
+                {
+                    printf("\nErro de sintaxe: user {username} {password}\n");
+                    break;
+                }
 
                 f = fopen(clientes.nome_ficheiro, "rt");
 
@@ -1622,29 +1655,31 @@ int main(int argc, char** argv) {//TODO:
 
                         printf("\nUtilizador ja existe\n");
                         fclose(f);
+                        flag=1;
                         break;
                     }
                 }
-                fclose(f);
+                
+                if(!flag)
+                {
+                    f = fopen(clientes.nome_ficheiro, "at");
 
-                f = fopen(clientes.nome_ficheiro, "at");
+                    if (!f) {
+                        printf("Erro ao abrir o ficheiro de utilizadores");
+                        break;
+                    }
 
-                if (!f) {
-                    printf("erro ao abrir o ficheiro de utilizadores");
-                    break;
+                    fprintf(f, "\n%s %s", primeiro, segundo);
+                    printf("Utilizador registado!");
+
+                    fclose(f);
                 }
-
-                segundo = strtok(NULL, " ");
-                fprintf(f, "\n%s %s", primeiro, segundo);
-
-                fclose(f);
-
                 break;
             case 3://USERS
                 printf("\nClientes Logados: \n");
                 for (i = 0; i < clientes.tam; i++) {
                     if (clientes.c[i].logado == 1) {
-                        printf("Username: %s  Pid: %d", clientes.c[i].username, clientes.c[i].id);
+                        printf("Username: %s  Pid: %d\n", clientes.c[i].username, clientes.c[i].id);
                     }
                 }
                 break;
@@ -1652,21 +1687,30 @@ int main(int argc, char** argv) {//TODO:
                 printf("\nEquipa a: %d - Equipa b: %d\n", resultados.res_eq1, resultados.res_eq2); //mostrar o resultado ao admin
                 break;
             case 5://RED
+                if(segundo==NULL)
+                {
+                    printf("\nErro de sintaxe: red {username}\n");
+                    break;
+                }
                 segundo = strtok(NULL, " ");
-                for (i = 0; i < clientes.tam; i++) {
-                    if (strcmp(clientes.c[i].username, segundo) == 0) {
-
-                        if (clientes.c[i].equi != '-') {
-                            clientes.c[i].jogador->humano = 0;
-                            clientes.c[i].equi = '-';
-
+                for (i = 0; i < clientes.tam; i++) 
+                {
+                    if (strcmp(clientes.c[i].username, segundo) == 0) 
+                    {
+                        clientes.c[i].logado=0;
+                        if(clientes.c[i].jogador!=NULL)
+                        {
+                            clientes.c[i].equi='-';
+                            clientes.c[i].jogador->humano=0;
                         }
-                        clientes.c[i].logado = 0;
-                        clientes.c[i].jogador = NULL;
                         strcpy(clientes.c[i].username, "");
                         kill(clientes.c[i].id, SIGUSR1);
+                        resultados.numClientes--;
+                        
+                        break;
                     }
                 }
+                break;
 
             case 6://shutdown
                 acabaJogo();
@@ -1674,6 +1718,7 @@ int main(int argc, char** argv) {//TODO:
                     kill(clientes.c[i].id, SIGUSR1);
                 }
                 sair = 1;
+                pthread_join(tempo, NULL);
                 break;
             default:
                 printf("\nComando Invalido!\n");
@@ -1683,9 +1728,5 @@ int main(int argc, char** argv) {//TODO:
 
     } while (!sair);
     //free(ele);//TODO:Ver se estes free estao bem
-    free(JOG);
-    pthread_join(jogo, NULL);
-    pthread_join(tempo, NULL);
-
 }
 
