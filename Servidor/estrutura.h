@@ -39,6 +39,7 @@ typedef struct {
     char equipa;
     int flag_logado;
     int flag_campo;
+    int flag_stop;
     RESULTADOS resultados;
 } serv_clie; //SERVER PARA CLIENTE
 
