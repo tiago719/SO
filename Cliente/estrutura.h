@@ -16,6 +16,7 @@ typedef struct {
     int res_eq2;
     int fim;
     int tempo;
+    int numClientes;
 } RESULTADOS;
 
 typedef struct {
@@ -38,6 +39,7 @@ typedef struct {
     char equipa;
     int flag_logado;
     int flag_campo;
+    int flag_stop;
     RESULTADOS resultados;
 } serv_clie; //SERVER PARA CLIENTE
 

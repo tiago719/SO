@@ -22,9 +22,9 @@ typedef struct {
 ;
 
 typedef struct {
-    char fim, humano, equi;
-    int tempo, num, posse_bola;
-    int precisao_remate;
+    char equi;
+    int tempo, num, posse_bola, humano, fim, precisao_remate;
+    pthread_t thread;
     POSICAO posicao;
 } JOGADOR;
 
@@ -48,8 +48,9 @@ int TOTAL;
 CLIENTES clientes;
 RESULTADOS resultados;
 int Ndefesa, Navanc, sair = 0;
-pthread_t jogo, tempo, tarefa_bola;
-pthread_t tarefa[2][9];
+
+pthread_t jogo, tempo, tarefa_bola; 
+
 
 /*
  * 0 - NAO OCUPADO
@@ -98,7 +99,7 @@ void atualiza_campo(serv_clie * j) {
     pthread_mutex_unlock(&trinco);
 }
 
-void inicializacao_campo(char * str) {
+void inicializacao_campo() {
     int i;
     serv_clie j;
 
@@ -1288,13 +1289,10 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
 void * Func_receber_cliente(void * dados) {
 
     clie_serv cliente;
-    char str[80], cmd[80];
-    int fd, fd_resp, i, r, rat;
+    char str[80];
+    int fd, fd_resp, i;
 
     serv_clie j;
-    FILE *f;
-    fd_set rfds;
-    struct timeval tv;
     j.flag_logado = 0;
     j.flag_campo = 0;
 
@@ -1346,7 +1344,7 @@ void * Func_receber_cliente(void * dados) {
             //                    close(fd);
             //                    continue;
             //                } else {
-            int aux, t;
+            int aux=0, t;
             j.flag_logado = 0;
             j.flag_campo = 0;
 
@@ -1366,6 +1364,7 @@ void * Func_receber_cliente(void * dados) {
                             if (aux == 0) {
                                 clientes.c[i].logado = 1;
                                 j.flag_logado = 1;
+                                resultados.numClientes++;
                                 //printf("cliente %d logado %s\n", cliente.id, cliente.user);
                                 strcpy(clientes.c[i].username, temp_user);
                             }
@@ -1394,16 +1393,25 @@ void * Func_receber_cliente(void * dados) {
 
 
             fclose(f);
-        } else if (cliente.flag_desliga) {
-            //            printf("\ndesligado: olaoal\n");
-            for (i = 0; i < clientes.tam; i++) {
-                if (clientes.c[i].id == cliente.id) {
+        } 
+        else if (cliente.flag_desliga) 
+        {
+            for (i = 0; i < clientes.tam; i++) 
+            {
+                if (clientes.c[i].id == cliente.id) 
+                {
                     clientes.c[i].logado = 0;
                     strcpy(clientes.c[i].username, " ");
-                    //printf("\ndesligado: %d \n", cli->c[i].id);
-
+                    clientes.c[i].equi='-';
+                    if(clientes.c[i].jogador!=NULL)
+                    {
+                        clientes.c[i].jogador->humano=0;
+                        clientes.c[i].jogador=NULL;
+                    } 
+                    break;
                 }
             }
+            resultados.numClientes--;
         } else if (cliente.flag_operacao) {
             operacao(&cliente, &clientes);
 
@@ -1437,24 +1445,45 @@ void comecaJogo() {
     resultados.fim = 0;
 
     pthread_create(&tarefa_bola, NULL, &bola, NULL);
-    pthread_create(&tarefa[0][0], NULL, &move_redes, (void *) &JOG[0][0]);
-    pthread_create(&tarefa[1][0], NULL, &move_redes, (void *) &JOG[1][0]);
+
+    pthread_create(&JOG[0][0].thread, NULL, &move_redes, (void *) &JOG[0][0]);
+    pthread_create(&JOG[1][0].thread, NULL, &move_redes, (void *) &JOG[1][0]);
 
     for (i = 1; i < TOTAL; i++) {
-        pthread_create(&tarefa[0][i], NULL, &move_jogador, (void *) &JOG[0][i]);
-        pthread_create(&tarefa[1][i], NULL, &move_jogador, (void *) &JOG[1][i]);
+        pthread_create(&JOG[0][i].thread, NULL, &move_jogador, (void *) &JOG[0][i]);
+        pthread_create(&JOG[1][i].thread, NULL, &move_jogador, (void *) &JOG[1][i]);
     }
 }
 
-void acabaJogo() {
+void acabaJogo()
+{
+    int i, fd;
+    serv_clie j;
+    
+
     resultados.fim = 1;
-    int i;
     for (i = 0; i < TOTAL; i++) {
-        pthread_join(tarefa[0][i], NULL);
-        pthread_join(tarefa[1][i], NULL);
+        pthread_join(JOG[0][i].thread, NULL);
+        pthread_join(JOG[1][i].thread, NULL);
     }
 
     pthread_join(tarefa_bola, NULL);
+    
+    usleep(100);
+    
+    for(i=0;i<clientes.tam;i++)
+    {
+        if(clientes.c[i].logado)
+        {
+            char str[80];
+            sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
+            fd = open(str, O_WRONLY);
+            
+            j.flag_campo=0;
+            j.flag_logado=0;
+            j.flag_stop=1;
+        }
+    }
 }
 
 void * contar_seg(void * dados) {
@@ -1517,9 +1546,13 @@ int main(int argc, char** argv) {//TODO:
     FILE *f;
 
 
-    int i, cont = 0;
-    char tecla, cmd[80];
-    resultados.fim = 1;
+
+    int i, flag=0;
+    char cmd[80];
+    
+    clientes.tam=0;
+    resultados.fim=1;
+    resultados.numClientes=clientes.tam;
 
     //    const char* AVndefesa = getenv("NDEFESAS");
     //    const char* AVnavanc = getenv("NAVANCADOS");
@@ -1545,26 +1578,14 @@ int main(int argc, char** argv) {//TODO:
         printf("Ja esta um servidor em execução\n");
         return 3;
     }*///TODO: Descomentar isto
-    clientes.tam = 0;
 
+    
     pthread_t receber_cliente;
 
     pthread_create(&receber_cliente, NULL, &Func_receber_cliente, NULL);
+    
+    mkfifo(FIFO, 0600);
 
-    /*
-    tarefa=(pthread_t*)malloc(sizeof(pthread_t)*2);
-    
-    tarefa[0]=(pthread_t*)malloc(sizeof(pthread_t)*total);
-    
-    tarefa[1]=(pthread_t*)malloc(sizeof(pthread_t)*total);
-    
-    if(tarefa==NULL || tarefa[0]==NULL || tarefa[1]==NULL)
-    {
-        printf("Nao foi possivel alocar memoria\n");
-        return 0;
-    }*/
-
-    int z = mkfifo(FIFO, 0600);
 
     do {
         printf("\nComando: ");
@@ -1586,7 +1607,7 @@ int main(int argc, char** argv) {//TODO:
             case 0://START
                 primeiro = strtok(NULL, " "); // tempo
                 if (primeiro == NULL) {
-                    printf("\nErro de sintaxe start {n}\n");
+                    printf("\nErro de sintaxe: start {n}\n");
                     break;
 
                 }
@@ -1611,6 +1632,13 @@ int main(int argc, char** argv) {//TODO:
 
             case 2://USER
                 primeiro = strtok(NULL, " ");
+                segundo = strtok(NULL, " ");
+                
+                if(primeiro==NULL || segundo==NULL)
+                {
+                    printf("\nErro de sintaxe: user {username} {password}\n");
+                    break;
+                }
 
                 f = fopen(clientes.nome_ficheiro, "rt");
 
@@ -1626,29 +1654,31 @@ int main(int argc, char** argv) {//TODO:
 
                         printf("\nUtilizador ja existe\n");
                         fclose(f);
+                        flag=1;
                         break;
                     }
                 }
-                fclose(f);
+                
+                if(!flag)
+                {
+                    f = fopen(clientes.nome_ficheiro, "at");
 
-                f = fopen(clientes.nome_ficheiro, "at");
+                    if (!f) {
+                        printf("Erro ao abrir o ficheiro de utilizadores");
+                        break;
+                    }
 
-                if (!f) {
-                    printf("erro ao abrir o ficheiro de utilizadores");
-                    break;
+                    fprintf(f, "\n%s %s", primeiro, segundo);
+                    printf("Utilizador registado!");
+
+                    fclose(f);
                 }
-
-                segundo = strtok(NULL, " ");
-                fprintf(f, "\n%s %s", primeiro, segundo);
-
-                fclose(f);
-
                 break;
             case 3://USERS
                 printf("\nClientes Logados: \n");
                 for (i = 0; i < clientes.tam; i++) {
                     if (clientes.c[i].logado == 1) {
-                        printf("Username: %s  Pid: %d", clientes.c[i].username, clientes.c[i].id);
+                        printf("Username: %s  Pid: %d\n", clientes.c[i].username, clientes.c[i].id);
                     }
                 }
                 break;
@@ -1656,21 +1686,30 @@ int main(int argc, char** argv) {//TODO:
                 printf("\nEquipa a: %d - Equipa b: %d\n", resultados.res_eq1, resultados.res_eq2); //mostrar o resultado ao admin
                 break;
             case 5://RED
+                if(segundo==NULL)
+                {
+                    printf("\nErro de sintaxe: red {username}\n");
+                    break;
+                }
                 segundo = strtok(NULL, " ");
-                for (i = 0; i < clientes.tam; i++) {
-                    if (strcmp(clientes.c[i].username, segundo) == 0) {
-
-                        if (clientes.c[i].equi != '-') {
-                            clientes.c[i].jogador->humano = 0;
-                            clientes.c[i].equi = '-';
-
+                for (i = 0; i < clientes.tam; i++) 
+                {
+                    if (strcmp(clientes.c[i].username, segundo) == 0) 
+                    {
+                        clientes.c[i].logado=0;
+                        if(clientes.c[i].jogador!=NULL)
+                        {
+                            clientes.c[i].equi='-';
+                            clientes.c[i].jogador->humano=0;
                         }
-                        clientes.c[i].logado = 0;
-                        clientes.c[i].jogador = NULL;
                         strcpy(clientes.c[i].username, "");
                         kill(clientes.c[i].id, SIGUSR1);
+                        resultados.numClientes--;
+                        
+                        break;
                     }
                 }
+                break;
 
             case 6://shutdown
                 acabaJogo();
@@ -1678,6 +1717,7 @@ int main(int argc, char** argv) {//TODO:
                     kill(clientes.c[i].id, SIGUSR1);
                 }
                 sair = 1;
+                pthread_join(tempo, NULL);
                 break;
             default:
                 printf("\nComando Invalido!\n");
@@ -1687,9 +1727,5 @@ int main(int argc, char** argv) {//TODO:
 
     } while (!sair);
     //free(ele);//TODO:Ver se estes free estao bem
-    free(JOG);
-    pthread_join(jogo, NULL);
-    pthread_join(tempo, NULL);
-
 }
 
