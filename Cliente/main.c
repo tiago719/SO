@@ -79,16 +79,14 @@ void atualiza_campo(serv_clie * j)
 
 void *recebe(void * dados) {
     int * flag_log = (int *) dados;
-
     int i, fd;
     char str[80], vencedor;
     serv_clie jogada, ant;
 
-
     sprintf(str, "/tmp/ccc%d", getpid());
 
-
-    do {
+     while (1) //TODO: define condicao de paragem
+     {
         fd = open(str, O_RDONLY);
         i = read(fd, &jogada, sizeof (serv_clie));
         //printf("\nChegou fl:%d, fc %d", jogada.flag_logado, jogada.flag_campo);
@@ -132,15 +130,24 @@ void *recebe(void * dados) {
             else if (jogada.flag_stop) 
             {
                 clear();
+                
+                if(jogada.resultados.res_eq1==jogada.resultados.res_eq2)
+                    {
+                        printf("O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                    }
+                    else
+                    {
+                        if(jogada.resultados.res_eq1>jogada.resultados.res_eq2)
+                            vencedor='a';
+                        else
+                            vencedor='b';
+                        printf("O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                    }
             }
 
         } 
         close(fd);
-    } while (1);
-
-    //printf("\nOLAOL!!\n");
-
-
+    }
     pthread_exit(0);
 }
 
@@ -351,10 +358,7 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     keypad(stdscr, TRUE);
     clear();
 
-
     envia_comando();
-
-
 
     pthread_join(tarefa, NULL);
 
