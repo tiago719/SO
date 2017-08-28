@@ -72,12 +72,12 @@ int isOcupado(int x, int y) {
     return 0;
 }
 
-void BolaParaMeio() {
+void bolaParaMeio() {
     ball.x = 11;
     ball.y = 26;
 }
 
-void atualiza_campo(serv_clie * j) {
+void atualizaCampo(serv_clie * j) {
     int i, fd;
     pthread_mutex_lock(&trinco);
 
@@ -112,7 +112,7 @@ void atualiza_campo(serv_clie * j) {
     pthread_mutex_unlock(&trinco);
 }
 
-void inicializacao_campo() {
+void inicializaCampo() {
     int i;
     serv_clie j;
 
@@ -126,7 +126,7 @@ void inicializacao_campo() {
 
         usleep(100000);
 
-        atualiza_campo(&j);
+        atualizaCampo(&j);
         usleep(100);
 
         j.xnovo = JOG[1][i].posicao.x;
@@ -136,7 +136,7 @@ void inicializacao_campo() {
         j.jogador = '0' + (JOG[1][i].num);
         j.equipa = JOG[1][i].equi;
 
-        atualiza_campo(&j);
+        atualizaCampo(&j);
         usleep(100);
     }
 
@@ -146,55 +146,19 @@ void inicializacao_campo() {
     j.yant = ball.y;
     j.jogador = 'o';
     j.equipa = 'n';
-    atualiza_campo(&j);
+    atualizaCampo(&j);
     usleep(100);
 }
 
-void inicializaJogadores() {
-    int cont = 0, i, temp;
-
-    //INICIAOLIZACAO REDES
-    JOG[0][0].fim = 0;
-    JOG[0][0].humano = 0;
-    JOG[0][0].num = cont;
-    JOG[0][0].precisao_remate = 25;
-    JOG[0][0].tempo = 300000;
-    JOG[0][0].equi = 'a';
-    JOG[0][0].posicao.x = 11;
-    JOG[0][0].posicao.y = 1;
-
-    JOG[1][0].fim = 0;
-    JOG[1][0].humano = 0;
-    JOG[1][0].num = cont;
-    JOG[1][0].precisao_remate = 25;
-    JOG[1][0].tempo = 300000;
-    JOG[1][0].equi = 'b';
-    JOG[1][0].posicao.x = 11;
-    JOG[1][0].posicao.y = 50;
-
-
-    cont++;
-    //---------------------
-    //INICIAOLIZACAO DEFESAS
-    for (i = 1; i <= Ndefesa; i++) {
-        JOG[0][i].fim = 0;
-        JOG[0][i].humano = 0;
-        JOG[0][i].num = cont;
-        JOG[0][i].precisao_remate = 80;
-        JOG[0][i].tempo = 400000;
-        JOG[0][i].equi = 'a';
-
-        JOG[1][i].fim = 0;
-        JOG[1][i].humano = 0;
-        JOG[1][i].num = cont;
-        JOG[1][i].precisao_remate = 80;
-        JOG[1][i].tempo = 400000;
-        JOG[1][i].equi = 'b';
-
-        cont++;
-    }
-
-    i = 1;
+void montaCampo(){
+    int i = 0;
+    
+    JOG[0][i].posicao.x = 11;
+    JOG[0][i].posicao.y = 1;
+    JOG[1][i].posicao.x = 11;
+    JOG[1][i].posicao.y = 50;
+    
+    i++;
     switch (Ndefesa) {
         case 1:
             JOG[0][i].posicao.x = 11;
@@ -271,29 +235,7 @@ void inicializaJogadores() {
             i++;
             break;
     }
-
-    //---------------------
-    //INICIAOLIZACAO AVANC
-    temp = i;
-    cont = 6;
-    for (; i < TOTAL; i++) {
-        JOG[0][i].fim = 0;
-        JOG[0][i].humano = 0;
-        JOG[0][i].num = cont;
-        JOG[0][i].precisao_remate = 60;
-        JOG[0][i].tempo = 300000;
-        JOG[0][i].equi = 'a';
-
-        JOG[1][i].fim = 0;
-        JOG[1][i].humano = 0;
-        JOG[1][i].num = cont;
-        JOG[1][i].precisao_remate = 60;
-        JOG[1][i].tempo = 300000;
-        JOG[1][i].equi = 'b';
-
-        cont++;
-    }
-    i = temp;
+    
     switch (Navanc) {
         case 1:
             JOG[0][i].posicao.x = 11;
@@ -341,8 +283,8 @@ void inicializaJogadores() {
             i++;
             break;
         case 4:
-            JOG[0][i].posicao.x = 24;
-            JOG[0][i].posicao.y = 9;
+            JOG[0][i].posicao.x = 9;
+            JOG[0][i].posicao.y = 24;
             JOG[1][i].posicao.x = 9;
             JOG[1][i].posicao.y = 27;
 
@@ -370,12 +312,80 @@ void inicializaJogadores() {
             i++;
             break;
     }
-    //--------------------- 
-
-    BolaParaMeio();
 }
 
-void golo() {
+void inicializaJogadores() {
+    int cont = 0, i;
+
+    //INICIAOLIZACAO REDES
+    JOG[0][0].fim = 0;
+    JOG[0][0].humano = 0;
+    JOG[0][0].num = cont;
+    JOG[0][0].precisao_remate = 25;
+    JOG[0][0].tempo = 300000;
+    JOG[0][0].equi = 'a';
+    
+
+    JOG[1][0].fim = 0;
+    JOG[1][0].humano = 0;
+    JOG[1][0].num = cont;
+    JOG[1][0].precisao_remate = 25;
+    JOG[1][0].tempo = 300000;
+    JOG[1][0].equi = 'b';
+
+
+
+    cont++;
+    //---------------------
+    //INICIAOLIZACAO DEFESAS
+    for (i = 1; i <= Ndefesa; i++) {
+        JOG[0][i].fim = 0;
+        JOG[0][i].humano = 0;
+        JOG[0][i].num = cont;
+        JOG[0][i].precisao_remate = 80;
+        JOG[0][i].tempo = 400000;
+        JOG[0][i].equi = 'a';
+
+        JOG[1][i].fim = 0;
+        JOG[1][i].humano = 0;
+        JOG[1][i].num = cont;
+        JOG[1][i].precisao_remate = 80;
+        JOG[1][i].tempo = 400000;
+        JOG[1][i].equi = 'b';
+
+        cont++;
+    }
+
+    
+
+    //---------------------
+    //INICIAOLIZACAO AVANC
+    cont = 6;
+    for (; i < TOTAL; i++) {
+        JOG[0][i].fim = 0;
+        JOG[0][i].humano = 0;
+        JOG[0][i].num = cont;
+        JOG[0][i].precisao_remate = 60;
+        JOG[0][i].tempo = 300000;
+        JOG[0][i].equi = 'a';
+
+        JOG[1][i].fim = 0;
+        JOG[1][i].humano = 0;
+        JOG[1][i].num = cont;
+        JOG[1][i].precisao_remate = 60;
+        JOG[1][i].tempo = 300000;
+        JOG[1][i].equi = 'b';
+
+        cont++;
+    }
+    
+    //--------------------- 
+
+    bolaParaMeio();
+    montaCampo();
+}
+
+void verificaGolo() {
     int x = ball.x, y = ball.y;
     if ((y <= 0 || y >= 50) && (x > 5 && x < 14)) {
 
@@ -387,7 +397,7 @@ void golo() {
             posse_bola = &JOG[1][0];
         }
 
-        //montaCampo();
+        montaCampo();
         int i;
         char str[80];
         //        serv_clie j;
@@ -406,16 +416,18 @@ void golo() {
         //        sleep(1);
 
         for (i = 0; i < clientes.tam; i++) {
+            clientes.c[i].jogador->humano = 0;
             clientes.c[i].jogador = NULL;
+            
 
             sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
-            inicializacao_campo(str);
+            inicializaCampo(str);
         }
     }
 }
 
 void passe(POSICAO orig, POSICAO * dest) {
-    golo();
+    verificaGolo();
 
     POSICAO d;
     serv_clie j;
@@ -449,7 +461,7 @@ void passe(POSICAO orig, POSICAO * dest) {
         j.ynovo = ball.y;
         j.jogador = 'o';
         //printf("\nxant: %d yant: %d | xnovo: %d  ynovo: %d \n", j.xant, j.yant, j.xnovo, j.ynovo);
-        atualiza_campo(&j);
+        atualizaCampo(&j);
         usleep(temp->tempo);
     }
 }
@@ -459,7 +471,7 @@ void * bola(void * dados) {
     int i, a;
 
     while (!resultados.fim) {
-        golo();
+        verificaGolo();
 
         if (posse_bola != NULL) {
 
@@ -473,7 +485,7 @@ void * bola(void * dados) {
             } else {
                 j.jogador = 'o' + 2;
                 ball.y = posse_bola->posicao.y - 1;
-
+                
             }
 
             ball.x = posse_bola->posicao.x;
@@ -491,8 +503,7 @@ void * bola(void * dados) {
 
             j.resultados = resultados;
 
-            //golo(j.xnovo, j.ynovo);
-            atualiza_campo(&j);
+            atualizaCampo(&j);
         }
         //
         //            for(a=0;a<2;a++)
@@ -576,7 +587,7 @@ void * move_jogador(void * dados) {
                 j.ynovo = jog->posicao.y;
                 j.resultados = resultados;
 
-                atualiza_campo(&j);
+                atualizaCampo(&j);
 
 
                 //if (posse_bola != NULL) {
@@ -720,7 +731,7 @@ void * move_redes(void * dados) {
             j.jogador = '0' + jog->num;
             j.equipa = jog->equi;
 
-            atualiza_campo(&j);
+            atualizaCampo(&j);
 
         }
         usleep(jog->tempo);
@@ -864,7 +875,7 @@ void controlaJogador(int op, CLIENTE * cliente) {
 
     j.xnovo = cliente->jogador->posicao.x;
     j.ynovo = cliente->jogador->posicao.y;
-    atualiza_campo(&j);
+    atualizaCampo(&j);
 
     if (cliente->jogador == posse_bola) {
         bola.xant = ball.x;
@@ -879,7 +890,7 @@ void controlaJogador(int op, CLIENTE * cliente) {
         ball.x = posse_bola->posicao.x;
         bola.ynovo = ball.y;
         bola.xnovo = ball.x;
-        atualiza_campo(&bola);
+        atualizaCampo(&bola);
     }
     //    atualiza_campo(&j);
 
@@ -1402,7 +1413,7 @@ void * Func_receber_cliente(void * dados) {
 
             sleep(1);
             if (!resultados.fim)
-                inicializacao_campo(str);
+                inicializaCampo(str);
 
 
             fclose(f);
@@ -1460,6 +1471,7 @@ void comecaJogo() {
     pthread_create(&tarefa_bola, NULL, &bola, NULL);
 
     pthread_create(&JOG[0][0].thread, NULL, &move_redes, (void *) &JOG[0][0]);
+    pthread_create(&JOG[0][6].thread, NULL, &move_jogador, (void *) &JOG[0][6]);
     /*pthread_create(&JOG[1][0].thread, NULL, &move_redes, (void *) &JOG[1][0]);
 
     for (i = 1; i < TOTAL; i++) {
@@ -1468,8 +1480,7 @@ void comecaJogo() {
     }*/
 }
 
-void acabaJogo()
-{
+void acabaJogo(){
     int i, fd;
     serv_clie j;
     
@@ -1512,7 +1523,7 @@ void * contar_seg(void * dados) {
         resultados.tempo--;
         j.resultados = resultados;
 
-        atualiza_campo(&j);
+        atualizaCampo(&j);
         sleep(1);
         tempo--;
     }
@@ -1538,8 +1549,7 @@ void acabar_servidor(int s) {
     }
 }
 
-void shutdown()
-{
+void shutdown(){
     acabaJogo();
     
     int i;
@@ -1562,7 +1572,7 @@ void shutdown()
     unlink(FIFO);
 }
 
-int main(int argc, char** argv) {//TODO:
+int main(int argc, char** argv) {
 
     if (argc != 2) {
         printf("SINTAXE: %s {nome_ficheiro}\n", argv[0]);
@@ -1622,12 +1632,15 @@ int main(int argc, char** argv) {//TODO:
     pthread_create(&receber_cliente, NULL, &Func_receber_cliente, NULL);
     
     mkfifo(FIFO, 0600);
+    
+    comecaJogo(); //----------------------------------------TODO: RETIRAR ISTO --------------------------------
 
 
     do {
         printf("\nComando: ");
 
         scanf(" %[^\n]", cmd);
+
         //printf("\ncomando: %s\n", cmd);
 
         char comandos[7][30] = {"start", "stop", "user", "users", "result", "red", "shutdown"};

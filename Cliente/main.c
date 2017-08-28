@@ -180,9 +180,11 @@ void logar(int * flag_log) {
 
     do {
         printf("\nuser: ");
-        scanf("%s", user);
-        printf("\npass: ");
-        scanf("%s", pass);
+//        scanf("%s", user); //TODO:DESCOMENTAR
+        strcpy(user, "user1");//TODO:COMENTAR
+        printf("\npass: "); 
+//        scanf("%s", pass); //TODO:DESCOMENTAR
+        strcpy(pass, "pass1"); //TODO:COMENTAR
         strcpy(novo.user, user);
         strcpy(novo.pass, pass);
         novo.id = getpid();
