@@ -112,6 +112,7 @@ void atualizaCampo(serv_clie * j) {
             j->resultados = resultados;
             write(fd, j, sizeof (serv_clie));
 
+
             //printf("\n{Servidor} Dados enviados para o cliente %d.\n" "Tamanho pretendido: %d Tamanho enviado: %d \n Jogador enviado: %c", clientes.c[i].id, sizeof (serv_clie), a, j->jogador);
             close(fd);
         }
@@ -550,11 +551,6 @@ void * move_jogador(void * dados) {
     j.flag_campo = 1;
     j.flag_logado = 0;
 
-    int num = 0;
-
-    if (jog->equi == 'b')
-        num = TOTAL;
-
     while (!resultados.fim) {
         if (!jog->humano) {
 
@@ -580,7 +576,7 @@ void * move_jogador(void * dados) {
             if (jog->posicao.y + d.y >= 0 && jog->posicao.y + d.y < MaxY &&
                     jog->posicao.x + d.x >= 0 && jog->posicao.x + d.x < MaxX) {
 
-                if (isOcupado(jog->posicao.x + d.x, jog->posicao.x + d.x) == 1)
+                if (isOcupado(jog->posicao.x + d.x, jog->posicao.y + d.y) == 1)
                     continue;
 
                 j.jogador = '0' + jog->num;
@@ -597,6 +593,7 @@ void * move_jogador(void * dados) {
                 j.resultados = resultados;
 
                 atualizaCampo(&j);
+                ;
 
 
                 //if (posse_bola != NULL) {
@@ -698,7 +695,6 @@ void * move_jogador(void * dados) {
                 //}
 
             }
-
         }
         usleep(jog->tempo);
     }
@@ -1422,8 +1418,7 @@ void * Func_receber_cliente(void * dados) {
 
             sleep(1);
             if (!resultados.fim)
-                inicializaCampo(str);
-
+                //inicializaCampo(str);TODO:Descomentar isto e testar
 
             fclose(f);
         } 
@@ -1463,7 +1458,7 @@ void comecaJogo() {
     resultados.res_eq2 = 0;
     resultados.fim = 0;
 
-    pthread_create(&tarefa_bola, NULL, &bola, NULL);
+    //pthread_create(&tarefa_bola, NULL, &bola, NULL);
 
     pthread_create(&JOG[0][0].thread, NULL, &move_redes, (void *) &JOG[0][0]);
     pthread_create(&JOG[1][0].thread, NULL, &move_redes, (void *) &JOG[1][0]);
@@ -1555,7 +1550,6 @@ void shutdown(){
     
     exit(3);
 }
-
 
 void acabar_servidor(int s) {
     if (s == SIGINT) 

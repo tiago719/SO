@@ -23,11 +23,8 @@ void atualiza_campo(serv_clie * j)
         attron(COLOR_PAIR(2));
     else if(j->equipa=='b')
         attron(COLOR_PAIR(1));
-    else
-    {    
+    else   
         attron(COLOR_PAIR(3));
-        j->jogador='o';
-    }
                 
     mvaddch(j->xant, j->yant, ' ');
 
@@ -73,7 +70,7 @@ void atualiza_campo(serv_clie * j)
         mvaddch(22, 50, '1');
         mvaddch(22, 51, '0' + j->resultados.numClientes%10);
     }
-
+        
     refresh();
 }
 
@@ -91,7 +88,7 @@ void *recebe(void * dados) {
         i = read(fd, &jogada, sizeof (serv_clie));
         //printf("\nChegou fl:%d, fc %d", jogada.flag_logado, jogada.flag_campo);
 
-        if (i == sizeof (serv_clie)) {
+        //if (i == sizeof (serv_clie)) {
             //printf("\n{CLIENTE} Os dados recebidos do servidor tem o tamanho pretendido.\n");
             if (jogada.flag_logado) {
                 //printf("\nVou meter a flag a 1\n");
@@ -144,8 +141,7 @@ void *recebe(void * dados) {
                         printf("O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
                     }
             }
-
-        } 
+        //} 
         close(fd);
     }
     pthread_exit(0);
@@ -187,10 +183,10 @@ void logar(int * flag_log) {
 
     do {
         printf("\nuser: ");
-//        scanf("%s", user); //TODO:DESCOMENTAR
+        //scanf("%s", user); //TODO:DESCOMENTAR
         strcpy(user, "user1");//TODO:COMENTAR
         printf("\npass: "); 
-//        scanf("%s", pass); //TODO:DESCOMENTAR
+        //scanf("%s", pass); //TODO:DESCOMENTAR
         strcpy(pass, "pass1"); //TODO:COMENTAR
         strcpy(novo.user, user);
         strcpy(novo.pass, pass);
