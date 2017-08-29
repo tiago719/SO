@@ -111,7 +111,7 @@ void atualizaCampo(serv_clie * j) {
             j->flag_stop=0;
             j->resultados = resultados;
             write(fd, j, sizeof (serv_clie));
-
+            //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", j->xant, j->yant, j->xnovo, j->ynovo);
 
             //printf("\n{Servidor} Dados enviados para o cliente %d.\n" "Tamanho pretendido: %d Tamanho enviado: %d \n Jogador enviado: %c", clientes.c[i].id, sizeof (serv_clie), a, j->jogador);
             close(fd);
@@ -1624,7 +1624,7 @@ int main(int argc, char** argv) {
     
     mkfifo(FIFO, 0600);
     
-    comecaJogo(); //----------------------------------------TODO: RETIRAR ISTO --------------------------------
+    //comecaJogo(); //----------------------------------------TODO: RETIRAR ISTO --------------------------------
 
 
     do {

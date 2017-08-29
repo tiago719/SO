@@ -53,6 +53,7 @@ void atualiza_campo(serv_clie * j)
     attron(COLOR_PAIR(1));
     mvaddch(22, 25, '0' + j->resultados.res_eq2);
     
+    
     attron(COLOR_PAIR(1));//TODO:meter a cor a 3
     mvaddch(22,41,'C');
     mvaddch(22,42,'l');
@@ -86,9 +87,11 @@ void *recebe(void * dados) {
      {
         fd = open(str, O_RDONLY);
         i = read(fd, &jogada, sizeof (serv_clie));
+                            //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", jogada.xant, jogada.yant, jogada.xnovo, jogada.ynovo);
+
         //printf("\nChegou fl:%d, fc %d", jogada.flag_logado, jogada.flag_campo);
 
-        //if (i == sizeof (serv_clie)) {
+        if (i == sizeof (serv_clie)) {
             //printf("\n{CLIENTE} Os dados recebidos do servidor tem o tamanho pretendido.\n");
             if (jogada.flag_logado) {
                 //printf("\nVou meter a flag a 1\n");
@@ -141,7 +144,7 @@ void *recebe(void * dados) {
                         printf("O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
                     }
             }
-        //} 
+        } 
         close(fd);
     }
     pthread_exit(0);
@@ -329,7 +332,7 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     //    signal(SIGUSR1, diz);
 
     clie_serv p;
-    pthread_t tarefa;
+    pthread_t tarefa1, tarefa2, tarefa3;
     int flag_log = 0;
 
 
@@ -339,7 +342,10 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     }
     ligacao();
 
-    pthread_create(&tarefa, NULL, &recebe, (void *) &flag_log);
+    pthread_create(&tarefa1, NULL, &recebe, (void *) &flag_log);
+    pthread_create(&tarefa2, NULL, &recebe, (void *) &flag_log);
+    //pthread_create(&tarefa3, NULL, &recebe, (void *) &flag_log);
+
     logar(&flag_log);
 
     initscr();
@@ -356,7 +362,7 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
 
     envia_comando();
 
-    pthread_join(tarefa, NULL);
+    //pthread_join(tarefa1, NULL);
 
     endwin();
     return 0;
