@@ -23,11 +23,8 @@ void atualiza_campo(serv_clie * j)
         attron(COLOR_PAIR(2));
     else if(j->equipa=='b')
         attron(COLOR_PAIR(1));
-    else
-    {    
+    else   
         attron(COLOR_PAIR(3));
-        j->jogador='o';
-    }
                 
     mvaddch(j->xant, j->yant, ' ');
 
@@ -56,6 +53,7 @@ void atualiza_campo(serv_clie * j)
     attron(COLOR_PAIR(1));
     mvaddch(22, 25, '0' + j->resultados.res_eq2);
     
+    
     attron(COLOR_PAIR(1));//TODO:meter a cor a 3
     mvaddch(22,41,'C');
     mvaddch(22,42,'l');
@@ -73,24 +71,24 @@ void atualiza_campo(serv_clie * j)
         mvaddch(22, 50, '1');
         mvaddch(22, 51, '0' + j->resultados.numClientes%10);
     }
-
+        
     refresh();
 }
 
 void *recebe(void * dados) {
     int * flag_log = (int *) dados;
-
     int i, fd;
     char str[80], vencedor;
     serv_clie jogada, ant;
 
-
     sprintf(str, "/tmp/ccc%d", getpid());
 
-
-    do {
+     while (1) //TODO: define condicao de paragem
+     {
         fd = open(str, O_RDONLY);
         i = read(fd, &jogada, sizeof (serv_clie));
+                            //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", jogada.xant, jogada.yant, jogada.xnovo, jogada.ynovo);
+
         //printf("\nChegou fl:%d, fc %d", jogada.flag_logado, jogada.flag_campo);
 
         if (i == sizeof (serv_clie)) {
@@ -132,15 +130,23 @@ void *recebe(void * dados) {
             else if (jogada.flag_stop) 
             {
                 clear();
+                
+                if(jogada.resultados.res_eq1==jogada.resultados.res_eq2)
+                    {
+                        printf("O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                    }
+                    else
+                    {
+                        if(jogada.resultados.res_eq1>jogada.resultados.res_eq2)
+                            vencedor='a';
+                        else
+                            vencedor='b';
+                        printf("O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                    }
             }
-
         } 
         close(fd);
-    } while (1);
-
-    //printf("\nOLAOL!!\n");
-
-
+    }
     pthread_exit(0);
 }
 
@@ -180,10 +186,10 @@ void logar(int * flag_log) {
 
     do {
         printf("\nuser: ");
-//        scanf("%s", user); //TODO:DESCOMENTAR
+        //scanf("%s", user); //TODO:DESCOMENTAR
         strcpy(user, "user1");//TODO:COMENTAR
         printf("\npass: "); 
-//        scanf("%s", pass); //TODO:DESCOMENTAR
+        //scanf("%s", pass); //TODO:DESCOMENTAR
         strcpy(pass, "pass1"); //TODO:COMENTAR
         strcpy(novo.user, user);
         strcpy(novo.pass, pass);
@@ -326,7 +332,7 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     //    signal(SIGUSR1, diz);
 
     clie_serv p;
-    pthread_t tarefa;
+    pthread_t tarefa1, tarefa2, tarefa3;
     int flag_log = 0;
 
 
@@ -336,7 +342,10 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     }
     ligacao();
 
-    pthread_create(&tarefa, NULL, &recebe, (void *) &flag_log);
+    pthread_create(&tarefa1, NULL, &recebe, (void *) &flag_log);
+    pthread_create(&tarefa2, NULL, &recebe, (void *) &flag_log);
+    //pthread_create(&tarefa3, NULL, &recebe, (void *) &flag_log);
+
     logar(&flag_log);
 
     initscr();
@@ -351,12 +360,9 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     keypad(stdscr, TRUE);
     clear();
 
-
     envia_comando();
 
-
-
-    pthread_join(tarefa, NULL);
+    //pthread_join(tarefa1, NULL);
 
     endwin();
     return 0;
