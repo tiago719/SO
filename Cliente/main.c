@@ -284,6 +284,7 @@ void envia_comando() {
         p.flag_con = 0;
         p.flag_log = 0;
         p.flag_desliga = 0;
+        p.flag_arbitro = 0;
 
         fd = open(FIFO, O_WRONLY);
 
