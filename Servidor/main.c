@@ -1504,25 +1504,22 @@ void acabaJogo() {
     }
 }
 
-//void * contar_seg(void * dados) {
-//    int * tempo = (int *) dados;
-//    serv_clie j;
-//    j.flag_campo = 1;
-//    j.xant = 99;
-//    j.xnovo = 99;
-//    j.yant = 99;
-//    j.ynovo = 99;
-//
-//    while (tempo > 0) {
-//        resultados.tempo--;
-//        j.resultados = resultados;
-//
-//        atualizaCampo(&j);
-//        sleep(1);
-//        tempo--;
-//    }
-//    resultados.fim = 1;
-//}
+void * contar_seg() 
+{
+    serv_clie j;
+    j.equipa='n';
+    j.jogador=' ';
+    j.xant=99;
+    j.xnovo=99;
+    j.yant=99;
+    j.ynovo=99;
+    while (resultados.tempo > 0 && !resultados.fim) 
+    {
+        resultados.tempo--;
+        atualizaCampo(&j);
+        sleep(1);
+    }
+}
 
 void trataSinal(int s) {
 
@@ -1676,7 +1673,7 @@ int main(int argc, char** argv) {
                     alarm(resultados.tempo);
 
                     comecaJogo();
-                    // pthread_create(&tempo, NULL, &contar_seg, &res.tempo);
+                    pthread_create(&tempo, NULL, &contar_seg,NULL);
                     sleep(1);
                 } else {
                     printf("\nEsta a decorrer um jogo!\n");
@@ -1685,7 +1682,9 @@ int main(int argc, char** argv) {
 
             case 1://STOP
                 if(!resultados.fim)
-                acabaJogo();
+                    acabaJogo();
+                else
+                    printf("\nNao esta nenhum jogo a decorrer\n");
                 break;
 
             case 2://USER
