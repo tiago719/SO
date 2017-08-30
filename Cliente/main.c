@@ -15,10 +15,11 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
-#include "estrutura.h"
+#include "../estrutura.h"
 
 void atualiza_campo(serv_clie * j) 
 {  
+    char tempo[20],clientes[20]; 
     if(j->equipa=='a')
         attron(COLOR_PAIR(2));
     else if(j->equipa=='b')
@@ -30,21 +31,10 @@ void atualiza_campo(serv_clie * j)
 
     mvaddch(j->xnovo, j->ynovo, j->jogador);
     
+    sprintf(tempo, "Tempo: %d", j->resultados.tempo);
+    
     attron(COLOR_PAIR(2));//TODO:meter a cor a 3
-    mvaddch(22,0,'T');
-    mvaddch(22,1,'e');
-    mvaddch(22,2,'m');
-    mvaddch(22,3,'p');
-    mvaddch(22,4,'o');
-    mvaddch(22,5,':');
-    if(j->resultados.tempo<9)
-        mvaddch(22, 6, '0' + j->resultados.tempo);
-    else
-    {
-        mvaddch(22, 7, '1');
-        mvaddch(22, 6, '0' + j->resultados.tempo%10);
-
-    }
+    mvaddstr(22,0,tempo);
 
     attron(COLOR_PAIR(2));
     mvaddch(22, 23, '0' + j->resultados.res_eq1);
@@ -55,30 +45,16 @@ void atualiza_campo(serv_clie * j)
     
     
     attron(COLOR_PAIR(1));//TODO:meter a cor a 3
-    mvaddch(22,41,'C');
-    mvaddch(22,42,'l');
-    mvaddch(22,43,'i');
-    mvaddch(22,44,'e');
-    mvaddch(22,45,'n');
-    mvaddch(22,46,'t');
-    mvaddch(22,47,'e');
-    mvaddch(22,48,'s');
-    mvaddch(22,49,':');
-    if(j->resultados.numClientes<9)
-        mvaddch(22, 50, '0' + j->resultados.numClientes);
-    else
-    {
-        mvaddch(22, 50, '1');
-        mvaddch(22, 51, '0' + j->resultados.numClientes%10);
-    }
+    sprintf(clientes, "Numero Clientes: %d", j->resultados.numClientes);
+    mvaddstr(22,41,clientes);
         
     refresh();
 }
 
 void *recebe(void * dados) {
     int * flag_log = (int *) dados;
-    int i, fd;
-    char str[80], vencedor;
+    int i, fd, flagCampo=0;
+    char str[80], vencedor, msgFimJogo[80];
     serv_clie jogada, ant;
 
     sprintf(str, "/tmp/ccc%d", getpid());
@@ -87,35 +63,22 @@ void *recebe(void * dados) {
      {
         fd = open(str, O_RDONLY);
         i = read(fd, &jogada, sizeof (serv_clie));
-                            //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", jogada.xant, jogada.yant, jogada.xnovo, jogada.ynovo);
+        //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", jogada.xant, jogada.yant, jogada.xnovo, jogada.ynovo);
 
         //printf("\nChegou fl:%d, fc %d", jogada.flag_logado, jogada.flag_campo);
 
-        if (i == sizeof (serv_clie)) {
-            //printf("\n{CLIENTE} Os dados recebidos do servidor tem o tamanho pretendido.\n");
-            if (jogada.flag_logado) {
-                //printf("\nVou meter a flag a 1\n");
+        if (i == sizeof (serv_clie)) 
+        {
+            if (jogada.flag_logado) 
+            {
                 *flag_log = 1;
             }
             if (jogada.flag_campo) 
             {
-                //printf("Cheguei ao atualiza campo");
-
-                if(jogada.resultados.fim==1)
+                if(flagCampo==0)
                 {
                     clear();
-                    if(jogada.resultados.res_eq1==jogada.resultados.res_eq2)
-                    {
-                        printf("O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
-                    }
-                    else
-                    {
-                        if(jogada.resultados.res_eq1>jogada.resultados.res_eq2)
-                            vencedor='a';
-                        else
-                            vencedor='b';
-                        printf("O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
-                    }
+                    flagCampo=1;
                 }
                 if (jogada.resultados.res_eq1 != ant.resultados.res_eq1
                         || jogada.resultados.res_eq2 != ant.resultados.res_eq2) {
@@ -130,10 +93,13 @@ void *recebe(void * dados) {
             else if (jogada.flag_stop) 
             {
                 clear();
+                attron(COLOR_PAIR(2));//TODO:Mudar para branco
+                flagCampo=0;
                 
                 if(jogada.resultados.res_eq1==jogada.resultados.res_eq2)
                     {
-                        printf("O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                        sprintf(msgFimJogo, "O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                        addstr(msgFimJogo);
                     }
                     else
                     {
@@ -141,8 +107,10 @@ void *recebe(void * dados) {
                             vencedor='a';
                         else
                             vencedor='b';
-                        printf("O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                        sprintf(msgFimJogo, "O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                        addstr(msgFimJogo);
                     }
+                refresh();
             }
         } 
         close(fd);
@@ -186,11 +154,11 @@ void logar(int * flag_log) {
 
     do {
         printf("\nuser: ");
-        //scanf("%s", user); //TODO:DESCOMENTAR
-        strcpy(user, "user1");//TODO:COMENTAR
+        scanf("%s", user); //TODO:DESCOMENTAR
+        //strcpy(user, "user1");//TODO:COMENTAR
         printf("\npass: "); 
-        //scanf("%s", pass); //TODO:DESCOMENTAR
-        strcpy(pass, "pass1"); //TODO:COMENTAR
+        scanf("%s", pass); //TODO:DESCOMENTAR
+        //strcpy(pass, "pass1"); //TODO:COMENTAR
         strcpy(novo.user, user);
         strcpy(novo.pass, pass);
         novo.id = getpid();
@@ -219,6 +187,7 @@ void desconetar(int s) {
     unlink(str);
     if (s == SIGINT) {
         endwin();
+        clear();
 
         int fd;
         clie_serv des;
@@ -298,7 +267,6 @@ void envia_comando() {
                 break;
             case KEY_DOWN:
                 p.op = 'd';
-                ;
                 break;
             case KEY_LEFT:
                 p.op = 'l';
@@ -362,7 +330,9 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
 
     envia_comando();
 
-    //pthread_join(tarefa1, NULL);
+    pthread_join(tarefa1, NULL);
+    pthread_join(tarefa2, NULL);
+
 
     endwin();
     return 0;

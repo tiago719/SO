@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
-#include "estrutura.h"
+#include "../estrutura.h"
 
 typedef struct {
     int y, x;
@@ -22,7 +22,7 @@ typedef struct {
 
 typedef struct {
     char equi;
-    int tempo, num, posse_bola, humano, fim, precisao_remate;
+    int tempo, num, posse_bola, humano, precisao_remate;
     pthread_t thread;
     POSICAO posicao;
 } JOGADOR;
@@ -47,8 +47,7 @@ int TOTAL;
 CLIENTES clientes;
 RESULTADOS resultados;
 int Ndefesa, Navanc, sair = 0;
-
-pthread_t jogo, tempo, tarefa_bola;
+pthread_t tempo, tarefa_bola; 
 
 /*
  * 0 - NAO OCUPADO
@@ -330,15 +329,12 @@ void inicializaJogadores() {
     int cont = 0, i;
 
     //INICIAOLIZACAO REDES
-    JOG[0][0].fim = 0;
     JOG[0][0].humano = 0;
     JOG[0][0].num = cont;
     JOG[0][0].precisao_remate = 25;
     JOG[0][0].tempo = 300000;
     JOG[0][0].equi = 'a';
 
-
-    JOG[1][0].fim = 0;
     JOG[1][0].humano = 0;
     JOG[1][0].num = cont;
     JOG[1][0].precisao_remate = 25;
@@ -351,14 +347,12 @@ void inicializaJogadores() {
     //---------------------
     //INICIAOLIZACAO DEFESAS
     for (i = 1; i <= Ndefesa; i++) {
-        JOG[0][i].fim = 0;
         JOG[0][i].humano = 0;
         JOG[0][i].num = cont;
         JOG[0][i].precisao_remate = 80;
         JOG[0][i].tempo = 400000;
         JOG[0][i].equi = 'a';
 
-        JOG[1][i].fim = 0;
         JOG[1][i].humano = 0;
         JOG[1][i].num = cont;
         JOG[1][i].precisao_remate = 80;
@@ -374,14 +368,12 @@ void inicializaJogadores() {
     //INICIAOLIZACAO AVANC
     cont = 6;
     for (; i < TOTAL; i++) {
-        JOG[0][i].fim = 0;
         JOG[0][i].humano = 0;
         JOG[0][i].num = cont;
         JOG[0][i].precisao_remate = 60;
         JOG[0][i].tempo = 300000;
         JOG[0][i].equi = 'a';
 
-        JOG[1][i].fim = 0;
         JOG[1][i].humano = 0;
         JOG[1][i].num = cont;
         JOG[1][i].precisao_remate = 60;
@@ -1499,51 +1491,41 @@ void acabaJogo() {
                 continue;
             }
             fd = open(str, O_WRONLY);
-
-            j.flag_campo = 0;
-            j.flag_logado = 0;
-            j.flag_stop = 1;
+          
+            j.flag_campo=0;
+            j.flag_logado=0;
+            j.flag_stop=1;
             j.resultados = resultados;
-
-            write(fd, &j, sizeof (serv_clie));
+          
+            
+            write(fd, &j,sizeof(serv_clie));
+            close(fd);
         }
     }
 }
 
-//void * contar_seg(void * dados) {
-//    int * tempo = (int *) dados;
-//    serv_clie j;
-//    j.flag_campo = 1;
-//    j.xant = 99;
-//    j.xnovo = 99;
-//    j.yant = 99;
-//    j.ynovo = 99;
-//
-//    while (tempo > 0) {
-//        resultados.tempo--;
-//        j.resultados = resultados;
-//
-//        atualizaCampo(&j);
-//        sleep(1);
-//        tempo--;
-//    }
-//    resultados.fim = 1;
-//}
+void * contar_seg() 
+{
+    serv_clie j;
+    j.equipa='n';
+    j.jogador=' ';
+    j.xant=99;
+    j.xnovo=99;
+    j.yant=99;
+    j.ynovo=99;
+    while (resultados.tempo > 0 && !resultados.fim) 
+    {
+        resultados.tempo--;
+        atualizaCampo(&j);
+        sleep(1);
+    }
+}
 
 void trataSinal(int s) {
 
     if (s == SIGALRM) {
         printf("\nACABOU TEMPO\n");
-        resultados.fim = 1;
-
-        int i;
-        for (i = 0; i < TOTAL; i++) {
-            pthread_join(JOG[0][i].thread, NULL);
-            pthread_join(JOG[1][i].thread, NULL);
-        }
-
-
-        //        acabaJogo();
+        acabaJogo();
         return;
     }
 
@@ -1691,7 +1673,7 @@ int main(int argc, char** argv) {
                     alarm(resultados.tempo);
 
                     comecaJogo();
-                    // pthread_create(&tempo, NULL, &contar_seg, &res.tempo);
+                    pthread_create(&tempo, NULL, &contar_seg,NULL);
                     sleep(1);
                 } else {
                     printf("\nEsta a decorrer um jogo!\n");
@@ -1700,7 +1682,9 @@ int main(int argc, char** argv) {
 
             case 1://STOP
                 if(!resultados.fim)
-                acabaJogo();
+                    acabaJogo();
+                else
+                    printf("\nNao esta nenhum jogo a decorrer\n");
                 break;
 
             case 2://USER
