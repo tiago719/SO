@@ -133,12 +133,11 @@ void ligacao() {
 
     int a = write(fd, &novo, sizeof (clie_serv));
 
-    if (a != sizeof (clie_serv)) {
-        printf("\nERRO A ENVIAR DADOS(LOGIN)!!\n");
+    if (a != sizeof (clie_serv)) 
+    {
         close(fd);
         return;
     }
-    printf("\n{LIGACAO} ENVIEI O %d\n. Tamanho da info enviada: %d", novo.id, a);
     close(fd);
 }
 
@@ -182,12 +181,11 @@ void logar(int * flag_log) {
 
 void desconetar(int s) {
     char str[80];
-    sprintf(str, "/tmp/ccc%d", getpid());
-
-    unlink(str);
+    
     if (s == SIGINT) {
         endwin();
         clear();
+        refresh();
 
         int fd;
         clie_serv des;
@@ -199,16 +197,23 @@ void desconetar(int s) {
         des.flag_log = 0;
         des.flag_operacao = 0;
 
-        printf("%d\n", write(fd, &des, sizeof (clie_serv)));
-        printf("%d\n", sizeof (clie_serv));
-
         close(fd);
+        
+        sprintf(str, "/tmp/ccc%d", getpid());
+
+        unlink(str);
 
         exit(3);
-    } else if (s == SIGUSR1) {
+    } else if (s == SIGUSR1) 
+    {
         endwin();
         clear();
+        refresh();
         printf("\nDesconetado pelo Servidor!\n");
+        
+        sprintf(str, "/tmp/ccc%d", getpid());
+
+        unlink(str);
 
         exit(3);
     }

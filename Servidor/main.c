@@ -160,10 +160,7 @@ void atualizaCampo(serv_clie * j) {
             j->flag_stop = 0;
             j->resultados = resultados;
 
-            write(fd, j, sizeof (serv_clie));
-            //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", j->xant, j->yant, j->xnovo, j->ynovo);
-
-            //printf("\n{Servidor} Dados enviados para o cliente %d.\n" "Tamanho pretendido: %d Tamanho enviado: %d \n Jogador enviado: %c", clientes.c[i].id, sizeof (serv_clie), a, j->jogador);
+            write(fd, j, sizeof (serv_clie));            
             close(fd);
         }
     }
@@ -1289,29 +1286,6 @@ void * contar_seg() {
     }
 }
 
-void trataSinal(int s) {
-
-    if (s == SIGALRM) {
-        printf("\nACABOU TEMPO\n");
-        acabaJogo();
-        return;
-    }
-
-    resultados.fim = 1;
-    unlink(FIFO);
-
-    if (s == SIGINT) {
-        int i;
-        for (i = 0; i < clientes.tam; i++) {
-            kill(clientes.c[i].id, SIGUSR1);
-        }
-        sair = 1;
-
-        exit(3);
-
-    }
-}
-
 void shutdown() {
     acabaJogo();
 
@@ -1325,16 +1299,12 @@ void shutdown() {
         kill(clientes.c[i].id, SIGUSR1);
         sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
         unlink(str);
-        free(&clientes.c[i]);
     }
-
-
-    for (i = 0; i < TOTAL; i++) {
-        free(&JOG[0][i]);
-        free(&JOG[1][i]);
-    }
-    free(&JOG[0]);
-    free(&JOG[1]);
+    
+    free(clientes.c);
+    
+    free(JOG[0]);
+    free(JOG[1]);
     free(JOG);
 
     unlink(FIFO);
@@ -1342,11 +1312,22 @@ void shutdown() {
     exit(3);
 }
 
-void acabar_servidor(int s) {
-    if (s == SIGINT) {
+void trataSinal(int s) {
+
+    if (s == SIGALRM) 
+    {
+        printf("\nACABOU TEMPO\n");
+        acabaJogo();
+        return;
+    }
+
+    if (s == SIGINT) 
+    {
         shutdown();
     }
-    if (s == SIGUSR1) {
+    
+    if(s==SIGUSR1)
+    {
         shutdown();
     }
 }
@@ -1399,8 +1380,8 @@ void * Func_receber_cliente(void * dados) {
 
         a = read(fd, &cliente, sizeof (clie_serv));
 
-        if (a != sizeof (clie_serv)) {
-            printf("\n{SERVIDOR} Nao foi possivel receber um pedido de um cliente com o size pretendido\n");
+        if (a != sizeof (clie_serv)) 
+        {
             close(fd);
             continue;
         }
@@ -1431,14 +1412,6 @@ void * Func_receber_cliente(void * dados) {
                 printf("Nao encontra ficheiro!!\n");
                 pthread_exit(0);
             }
-
-
-            //            while (1) {
-            //                if (i != sizeof (clie_serv)) {
-            //                    printf("\nERRO AO RECEBER LOGIN!!\n");
-            //                    close(fd);
-            //                    continue;
-            //                } else {
             int aux = 0, t;
             j.flag_logado = 0;
             j.flag_campo = 0;
@@ -1451,7 +1424,6 @@ void * Func_receber_cliente(void * dados) {
                             for (t = 0; t < clientes.tam; t++) {
                                 if (strcmp(cliente.user, clientes.c[t].username) == 0) {
 
-                                    //printf("\nUSERNAME: %s \n", cli->c[t].username);
                                     j.flag_logado = 0;
                                     aux = 1;
                                 }
@@ -1460,7 +1432,6 @@ void * Func_receber_cliente(void * dados) {
                                 clientes.c[i].logado = 1;
                                 j.flag_logado = 1;
                                 resultados.numClientes++;
-                                //printf("cliente %d logado %s\n", cliente.id, cliente.user);
                                 strcpy(clientes.c[i].username, temp_user);
                             }
                             break;
@@ -1469,22 +1440,18 @@ void * Func_receber_cliente(void * dados) {
                     break;
                 }
             }
-            //printf("\nVou enviar resposta: fl: %d, gc: %d\n", j.flag_logado, j.flag_campo);
             sprintf(str, "/tmp/ccc%d", cliente.id);
             if (access(str, F_OK) != 0) {
                 printf("cliente off\n");
-                //                return 3;
             }
             fd_resp = open(str, O_WRONLY);
-            //            sleep(1);
-            //printf("\nstr: %s \n", str);
 
             write(fd_resp, &j, sizeof (serv_clie));
             close(fd_resp);
 
             sleep(1);
             if (!resultados.fim)
-                //inicializaCampo(str);//TODO:Descomentar isto e testar
+                inicializaCampo(str);
 
                 fclose(f);
         } else if (cliente.flag_desliga) {
@@ -1525,7 +1492,6 @@ void * Func_receber_cliente(void * dados) {
         }
 
     }//while
-    //close(fd);
     pthread_exit(0);
 }
 
@@ -1538,10 +1504,10 @@ int main(int argc, char** argv) {
 
     strcpy(clientes.nome_ficheiro, argv[1]);
 
-
     srand((unsigned int) time(NULL));
     signal(SIGINT, trataSinal); //TODO: NAO ESTA A FUNCIONAR (ACHO)
-    signal(SIGALRM, trataSinal); //TODO: NAO ESTA A FUNCIONAR (ACHO)
+    signal(SIGALRM, trataSinal);
+    signal(SIGUSR1, trataSinal);
 
     char *primeiro;
     char *segundo;
@@ -1570,15 +1536,19 @@ int main(int argc, char** argv) {
 
     JOG[0] = (JOGADOR *) malloc(sizeof (JOGADOR) * TOTAL);
     JOG[1] = (JOGADOR *) malloc(sizeof (JOGADOR) * TOTAL);
+    
+    if(JOG==NULL || JOG[0]==NULL || JOG[1]==NULL)
+    {
+        printf("\nNao foi possivel alocar memoria\n");
+        return 0;
+    }
 
     inicializaJogadores();
-    //    montaCampo();
 
-    /*if (access(FIFO, F_OK) == 0) {
+    if (access(FIFO, F_OK) == 0) {
         printf("Ja esta um servidor em execução\n");
         return 3;
-    }*///TODO: descomentar isto
-
+    }
 
     pthread_t receber_cliente;
 
