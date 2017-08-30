@@ -49,7 +49,6 @@ RESULTADOS resultados;
 int Ndefesa, Navanc, sair = 0;
 pthread_t tempo, tarefa_bola; 
 
-
 /*
  * 0 - NAO OCUPADO
  * 1 - OCUPADO
@@ -90,17 +89,21 @@ void bolaParaMeio() {
 
 void atualizaCampo(serv_clie * j) {
     int i, fd;
-    pthread_mutex_lock(&trinco);
+//        pthread_mutex_lock(&trinco);
 
     for (i = 0; i < clientes.tam; i++) {
-        if (clientes.c[i].logado) 
-        {
+        if (clientes.c[i].logado) {
             char str[80];
             sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
-            
-            if (access(str, F_OK) != 0)
-            {
+
+            if (access(str, F_OK) != 0) {
                 resultados.numClientes--;
+                clientes.c[i].logado = 0;
+                if (clientes.c[i].jogador != NULL) {
+                    clientes.c[i].jogador->humano = 0;
+                    clientes.c[i].jogador = NULL;
+                }
+                clientes.c[i].equi = '-';
                 removeCliente(i);
                 continue;
             }
@@ -109,6 +112,7 @@ void atualizaCampo(serv_clie * j) {
             j->flag_logado = 1;
             j->flag_stop=0;
             j->resultados = resultados;
+
             write(fd, j, sizeof (serv_clie));
             //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", j->xant, j->yant, j->xnovo, j->ynovo);
 
@@ -116,7 +120,7 @@ void atualizaCampo(serv_clie * j) {
             close(fd);
         }
     }
-    pthread_mutex_unlock(&trinco);
+    //    pthread_mutex_unlock(&trinco);
 }
 
 void inicializaCampo() {
@@ -157,14 +161,14 @@ void inicializaCampo() {
     usleep(100);
 }
 
-void montaCampo(){
+void montaCampo() {
     int i = 0;
-    
+
     JOG[0][i].posicao.x = 11;
     JOG[0][i].posicao.y = 1;
     JOG[1][i].posicao.x = 11;
     JOG[1][i].posicao.y = 50;
-    
+
     i++;
     switch (Ndefesa) {
         case 1:
@@ -242,7 +246,7 @@ void montaCampo(){
             i++;
             break;
     }
-    
+
     switch (Navanc) {
         case 1:
             JOG[0][i].posicao.x = 11;
@@ -331,7 +335,7 @@ void inicializaJogadores() {
     JOG[0][0].precisao_remate = 25;
     JOG[0][0].tempo = 300000;
     JOG[0][0].equi = 'a';
-    
+
 
     JOG[1][0].fim = 0;
     JOG[1][0].humano = 0;
@@ -363,7 +367,7 @@ void inicializaJogadores() {
         cont++;
     }
 
-    
+
 
     //---------------------
     //INICIAOLIZACAO AVANC
@@ -385,7 +389,7 @@ void inicializaJogadores() {
 
         cont++;
     }
-    
+
     //--------------------- 
 
     bolaParaMeio();
@@ -428,9 +432,8 @@ void verificaGolo() {
                 clientes.c[i].jogador->humano = 0;
                 clientes.c[i].jogador = NULL;
             }
-
             sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
-            inicializaCampo(str);
+            //            inicializaCampo(str);
         }
     }
 }
@@ -494,7 +497,7 @@ void * bola(void * dados) {
             } else {
                 j.jogador = 'o' + 2;
                 ball.y = posse_bola->posicao.y - 1;
-                
+
             }
 
             ball.x = posse_bola->posicao.x;
@@ -512,7 +515,7 @@ void * bola(void * dados) {
 
             j.resultados = resultados;
 
-            atualizaCampo(&j);
+            //            atualizaCampo(&j);
         }
         //
         //            for(a=0;a<2;a++)
@@ -577,6 +580,7 @@ void * move_jogador(void * dados) {
 
                 if (isOcupado(jog->posicao.x + d.x, jog->posicao.y + d.y) == 1)
                     continue;
+//                pthread_mutex_unlock(&trinco);
 
                 j.jogador = '0' + jog->num;
                 j.equipa = jog->equi;
@@ -590,6 +594,7 @@ void * move_jogador(void * dados) {
                 j.xnovo = jog->posicao.x;
                 j.ynovo = jog->posicao.y;
                 j.resultados = resultados;
+                        pthread_mutex_unlock(&trinco);
 
                 atualizaCampo(&j);
                 ;
@@ -694,8 +699,9 @@ void * move_jogador(void * dados) {
                 //}
 
             }
+            usleep(jog->tempo);
         }
-        usleep(jog->tempo);
+
     }
     pthread_exit(0);
 }
@@ -1372,7 +1378,7 @@ void * Func_receber_cliente(void * dados) {
             //                    close(fd);
             //                    continue;
             //                } else {
-            int aux=0, t;
+            int aux = 0, t;
             j.flag_logado = 0;
             j.flag_campo = 0;
             j.flag_stop=0;
@@ -1417,24 +1423,20 @@ void * Func_receber_cliente(void * dados) {
 
             sleep(1);
             if (!resultados.fim)
-                //inicializaCampo(str);TODO:Descomentar isto e testar
+                //inicializaCampo(str);//TODO:Descomentar isto e testar
 
-            fclose(f);
-        } 
-        else if (cliente.flag_desliga) 
-        {
-            for (i = 0; i < clientes.tam; i++) 
-            {
-                if (clientes.c[i].id == cliente.id) 
-                {
+                fclose(f);
+        }
+        else if (cliente.flag_desliga) {
+            for (i = 0; i < clientes.tam; i++) {
+                if (clientes.c[i].id == cliente.id) {
                     clientes.c[i].logado = 0;
                     strcpy(clientes.c[i].username, " ");
-                    clientes.c[i].equi='-';
-                    if(clientes.c[i].jogador!=NULL)
-                    {
-                        clientes.c[i].jogador->humano=0;
-                        clientes.c[i].jogador=NULL;
-                    } 
+                    clientes.c[i].equi = '-';
+                    if (clientes.c[i].jogador != NULL) {
+                        clientes.c[i].jogador->humano = 0;
+                        clientes.c[i].jogador = NULL;
+                    }
                     break;
                 }
             }
@@ -1453,6 +1455,7 @@ void * Func_receber_cliente(void * dados) {
 void comecaJogo() {
     int i;
 
+    montaCampo();
     resultados.res_eq1 = 0;
     resultados.res_eq2 = 0;
     resultados.fim = 0;
@@ -1468,10 +1471,10 @@ void comecaJogo() {
     }
 }
 
-void acabaJogo(){
+void acabaJogo() {
     int i, fd;
     serv_clie j;
-    
+
 
     resultados.fim = 1;
     for (i = 0; i < TOTAL; i++) {
@@ -1480,13 +1483,11 @@ void acabaJogo(){
     }
 
     pthread_join(tarefa_bola, NULL);
-    
+
     usleep(100);
-    
-    for(i=0;i<clientes.tam;i++)
-    {
-        if(clientes.c[i].logado)
-        {
+
+    for (i = 0; i < clientes.tam; i++) {
+        if (clientes.c[i].logado) {
             char str[80];
             sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
             
@@ -1497,10 +1498,12 @@ void acabaJogo(){
                 continue;
             }
             fd = open(str, O_WRONLY);
-            
+          
             j.flag_campo=0;
             j.flag_logado=0;
             j.flag_stop=1;
+            j.resultados = resultados;
+          
             
             write(fd, &j,sizeof(serv_clie));
             close(fd);
@@ -1508,46 +1511,83 @@ void acabaJogo(){
     }
 }
 
-void * contar_seg(void * dados) {
-    int * tempo = (int *) dados;
-    serv_clie j;
-    j.flag_campo = 1;
-    j.xant = 99;
-    j.xnovo = 99;
-    j.yant = 99;
-    j.ynovo = 99;
+//void * contar_seg(void * dados) {
+//    int * tempo = (int *) dados;
+//    serv_clie j;
+//    j.flag_campo = 1;
+//    j.xant = 99;
+//    j.xnovo = 99;
+//    j.yant = 99;
+//    j.ynovo = 99;
+//
+//    while (tempo > 0) {
+//        resultados.tempo--;
+//        j.resultados = resultados;
+//
+//        atualizaCampo(&j);
+//        sleep(1);
+//        tempo--;
+//    }
+//    resultados.fim = 1;
+//}
 
-    while (tempo > 0) {
-        resultados.tempo--;
-        j.resultados = resultados;
+void trataSinal(int s) {
 
-        atualizaCampo(&j);
-        sleep(1);
-        tempo--;
+    if (s == SIGALRM) {
+        printf("\nACABOU TEMPO\n");
+        resultados.fim = 1;
+
+        int i;
+        for (i = 0; i < TOTAL; i++) {
+            pthread_join(JOG[0][i].thread, NULL);
+            pthread_join(JOG[1][i].thread, NULL);
+        }
+
+
+        //        acabaJogo();
+        return;
     }
+
     resultados.fim = 1;
+    unlink(FIFO);
+
+    if (s == SIGINT) {
+        int i;
+        for (i = 0; i < clientes.tam; i++) {
+            kill(clientes.c[i].id, SIGUSR1);
+        }
+        sair = 1;
+
+        exit(3);
+
+    }
 }
 
 void shutdown(){
     acabaJogo();
-    
+
     int i;
     char str[20];
-    
+
     resultados.fim = 1;
     pthread_join(tempo, NULL);
-    
-     for (i = 0; i < clientes.tam; i++) 
-     {
+
+    for (i = 0; i < clientes.tam; i++) {
         kill(clientes.c[i].id, SIGUSR1);
-        //sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
-        //unlink(str);//TODO:O cliente ja faz isto
-     }
-                    
-    free(JOG[0]);
-    free(JOG[1]);
+        sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
+        unlink(str);
+        free(&clientes.c[i]);
+    }
+
+
+    for (i = 0; i < TOTAL; i++) {
+        free(&JOG[0][i]);
+        free(&JOG[1][i]);
+    }
+    free(&JOG[0]);
+    free(&JOG[1]);
     free(JOG);
-    
+
     unlink(FIFO);
     
     exit(3);
@@ -1575,24 +1615,19 @@ int main(int argc, char** argv) {
 
 
     srand((unsigned int) time(NULL));
-    signal(SIGINT, SIG_IGN);
-    //signal(SIGUSR1, acabar_servidor);
+    signal(SIGINT, trataSinal); //TODO: NAO ESTA A FUNCIONAR (ACHO)
+    signal(SIGALRM, trataSinal); //TODO: NAO ESTA A FUNCIONAR (ACHO)
 
-    signal(SIGINT, acabar_servidor);//TODO: NAO ESTA A FUNCIONAR (ACHO)
-    signal(SIGALRM, acabar_servidor);//TODO: NAO ESTA A FUNCIONAR (ACHO), acho que nao fecha servidor, so acaba o jogo
-  
     char *primeiro;
     char *segundo;
     FILE *f;
 
-
-
-    int i, flag=0;
+    int i, flag = 0;
     char cmd[80];
-    
-    clientes.tam=0;
-    resultados.fim=1;
-    resultados.numClientes=clientes.tam;
+
+    clientes.tam = 0;
+    resultados.fim = 1;
+    resultados.numClientes = clientes.tam;
 
     //    const char* AVndefesa = getenv("NDEFESAS");
     //    const char* AVnavanc = getenv("NAVANCADOS");
@@ -1619,15 +1654,12 @@ int main(int argc, char** argv) {
         return 3;
     }*///TODO: descomentar isto
 
-    
+
     pthread_t receber_cliente;
 
     pthread_create(&receber_cliente, NULL, &Func_receber_cliente, NULL);
-    
-    mkfifo(FIFO, 0600);
-    
-    //comecaJogo(); //----------------------------------------TODO: RETIRAR ISTO --------------------------------
 
+    mkfifo(FIFO, 0600);
 
     do {
         printf("\nComando: ");
@@ -1657,7 +1689,7 @@ int main(int argc, char** argv) {
                 if (resultados.fim == 1) {
                     resultados.tempo = atoi(primeiro);
 
-                    //alarm(res.tempo);
+                    alarm(resultados.tempo);
 
                     comecaJogo();
                     // pthread_create(&tempo, NULL, &contar_seg, &res.tempo);
@@ -1676,9 +1708,8 @@ int main(int argc, char** argv) {
                 flag=0;
                 primeiro = strtok(NULL, " ");
                 segundo = strtok(NULL, " ");
-                
-                if(primeiro==NULL || segundo==NULL)
-                {
+
+                if (primeiro == NULL || segundo == NULL) {
                     printf("\nErro de sintaxe: user {username} {password}\n");
                     break;
                 }
@@ -1697,13 +1728,12 @@ int main(int argc, char** argv) {
 
                         printf("\nUtilizador ja existe\n");
                         fclose(f);
-                        flag=1;
+                        flag = 1;
                         break;
                     }
                 }
-                
-                if(!flag)
-                {
+
+                if (!flag) {
                     f = fopen(clientes.nome_ficheiro, "at");
 
                     if (!f) {
