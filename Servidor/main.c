@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
-#include "estrutura.h"
+#include "../estrutura.h"
 
 typedef struct {
     int y, x;
@@ -45,6 +45,7 @@ JOGADOR ** JOG;
 JOGADOR * posse_bola;
 int TOTAL;
 CLIENTES clientes;
+CLIENTE Arbitro;
 RESULTADOS resultados;
 int Ndefesa, Navanc, sair = 0;
 pthread_t tempo, tarefa_bola;
@@ -85,13 +86,11 @@ void removeCliente(int index) {
     strcpy(clientes.c[index].username, "");
 }
 
-void resetClientes()
-{
+void resetClientes() {
     int i;
-    for(i=0;i<clientes.tam;i++)
-    {
-        clientes.c[i].equi='-';
-        clientes.c[i].jogador=NULL;
+    for (i = 0; i < clientes.tam; i++) {
+        clientes.c[i].equi = '-';
+        clientes.c[i].jogador = NULL;
     }
 }
 
@@ -100,13 +99,14 @@ void acabaJogo() {
     serv_clie j;
 
     resultados.fim = 1;
+    posse_bola=NULL;
     for (i = 0; i < TOTAL; i++) {
         pthread_join(JOG[0][i].thread, NULL);
         pthread_join(JOG[1][i].thread, NULL);
     }
 
     pthread_join(tarefa_bola, NULL);
-    
+
     resetClientes();
 
     usleep(100);
@@ -159,7 +159,7 @@ void atualizaCampo(serv_clie * j) {
             j->flag_stop = 0;
             j->resultados = resultados;
 
-            write(fd, j, sizeof (serv_clie));            
+            write(fd, j, sizeof (serv_clie));
             close(fd);
         }
     }
@@ -521,21 +521,20 @@ void * bola() {
             continue;
 
         verificaGolo();
-        j.xant=ball.x;
-        j.yant=ball.y;
-        j.xnovo=ball.x;
-        j.ynovo=ball.y;
-        j.jogador='o';
-        j.equipa='n';
+        j.xant = ball.x;
+        j.yant = ball.y;
+        j.xnovo = ball.x;
+        j.ynovo = ball.y;
+        j.jogador = 'o';
+        j.equipa = 'n';
 
-        if (posse_bola != NULL) 
-        {
+        if (posse_bola != NULL) {
             if (posse_bola->equi == 'a') {
-                j.equipa='a';
+                j.equipa = 'a';
                 ball.y = posse_bola->posicao.y + 1;
 
             } else {
-                j.equipa='b';
+                j.equipa = 'b';
                 ball.y = posse_bola->posicao.y - 1;
 
             }
@@ -576,8 +575,7 @@ void * move_jogador(void * dados) {
     j.flag_campo = 1;
     j.flag_logado = 0;
 
-    while (!resultados.fim) 
-    {
+    while (!resultados.fim) {
         if (jog->falta)
             continue;
 
@@ -606,12 +604,11 @@ void * move_jogador(void * dados) {
                     jog->posicao.x + d.x >= 0 && jog->posicao.x + d.x < MaxX) {
                 pthread_mutex_lock(&trinco);
 
-                if (isOcupado(jog->posicao.x + d.x, jog->posicao.y + d.y) == 1)
-                {
+                if (isOcupado(jog->posicao.x + d.x, jog->posicao.y + d.y) == 1) {
                     pthread_mutex_unlock(&trinco);
                     continue;
                 }
-                
+
                 j.jogador = '0' + jog->num;
                 j.equipa = jog->equi;
 
@@ -644,7 +641,7 @@ void * move_redes(void * dados) {
     while (!resultados.fim) {
         if (jog->falta)
             continue;
-        
+
         if (!jog->humano) {
             d.x = 0;
             int r = rand() % 2;
@@ -654,11 +651,9 @@ void * move_redes(void * dados) {
             } else {
                 d.x = -1;
             }
-            if (jog->posicao.x + d.x >= limInfXRedes && jog->posicao.x + d.x <= limSupXRedes) 
-            {
+            if (jog->posicao.x + d.x >= limInfXRedes && jog->posicao.x + d.x <= limSupXRedes) {
                 pthread_mutex_lock(&trinco);
-                if (isOcupado(jog->posicao.x + d.x, jog->posicao.x + d.y) == 1)
-                {
+                if (isOcupado(jog->posicao.x + d.x, jog->posicao.x + d.y) == 1) {
                     pthread_mutex_unlock(&trinco);
                     continue;
                 }
@@ -674,7 +669,7 @@ void * move_redes(void * dados) {
 
                 j.jogador = '0' + jog->num;
                 j.equipa = jog->equi;
-                
+
                 pthread_mutex_unlock(&trinco);
                 atualizaCampo(&j);
             }
@@ -1285,7 +1280,7 @@ void * contar_seg() {
     while (resultados.tempo > 0 && !resultados.fim) {
         if (resultados.intervalo)
             continue;
-        
+
         resultados.tempo--;
         atualizaCampo(&j);
         sleep(1);
@@ -1306,34 +1301,32 @@ void shutdown() {
         sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
         unlink(str);
     }
-    
+
     free(clientes.c);
-    
+
     free(JOG[0]);
     free(JOG[1]);
     free(JOG);
 
     unlink(FIFO);
+    unlink(FIFO_Arbitro);
 
     exit(3);
 }
 
 void trataSinal(int s) {
 
-    if (s == SIGALRM) 
-    {
+    if (s == SIGALRM) {
         printf("\nACABOU TEMPO\n");
         acabaJogo();
         return;
     }
 
-    if (s == SIGINT) 
-    {
+    if (s == SIGINT) {
         shutdown();
     }
-    
-    if(s==SIGUSR1)
-    {
+
+    if (s == SIGUSR1) {
         shutdown();
     }
 }
@@ -1355,11 +1348,14 @@ void AR_Recomeca() {
 }
 
 void AR_Falta() {
-    if(posse_bola == NULL)
+    JOGADOR * aux;
+    if (posse_bola == NULL)
         return;
     posse_bola->falta = 1;
+    aux = posse_bola;
+    posse_bola = NULL;
     sleep(5);
-    posse_bola->falta = 0;
+    aux->falta = 0;
 }
 
 void AR_Termina() {
@@ -1386,14 +1382,17 @@ void * Func_receber_cliente(void * dados) {
 
         a = read(fd, &cliente, sizeof (clie_serv));
 
-        if (a != sizeof (clie_serv)) 
-        {
+        if (a != sizeof (clie_serv)) {
             close(fd);
             continue;
         }
         close(fd);
 
         if (cliente.flag_con) {
+            if (cliente.flag_arbitro) {
+                Arbitro.id = cliente.id;
+                continue;
+            }
             if (clientes.tam < 19) {
                 if (clientes.tam == 0)
                     clientes.c = (CLIENTE *) malloc(sizeof (CLIENTE));
@@ -1459,7 +1458,7 @@ void * Func_receber_cliente(void * dados) {
             if (!resultados.fim)
                 inicializaCampo(str);
 
-                fclose(f);
+            fclose(f);
         } else if (cliente.flag_desliga) {
             for (i = 0; i < clientes.tam; i++) {
                 if (clientes.c[i].id == cliente.id) {
@@ -1474,30 +1473,37 @@ void * Func_receber_cliente(void * dados) {
                 }
             }
             resultados.numClientes--;
-        }
-        else if (cliente.flag_operacao) {
+        } else if (cliente.flag_operacao) {
             operacao(&cliente, &clientes);
-        } else if (cliente.flag_arbitro) {
-            switch (cliente.op) {
-                case 0:
-                    AR_Inicio();
-                    break;
-                case 1:
-                    AR_Itervalo();
-                    break;
-                case 2:
-                    AR_Recomeca();
-                    break;
-                case 3:
-                    AR_Falta();
-                    break;
-                case 4:
-                    AR_Termina();
-                    break;
-            }
         }
 
     }//while
+    pthread_exit(0);
+}
+
+void * Receber_Arbitro(void * dados) {
+    int fd, op;
+    while (!sair) {
+        fd = open(FIFO_Arbitro, O_RDONLY);
+        read(fd, &op, sizeof (int));
+        switch (op) {
+            case 0:
+                AR_Inicio();
+                break;
+            case 1:
+                AR_Itervalo();
+                break;
+            case 2:
+                AR_Recomeca();
+                break;
+            case 3:
+                AR_Falta();
+                break;
+            case 4:
+                AR_Termina();
+                break;
+        }
+    }
     pthread_exit(0);
 }
 
@@ -1542,9 +1548,8 @@ int main(int argc, char** argv) {
 
     JOG[0] = (JOGADOR *) malloc(sizeof (JOGADOR) * TOTAL);
     JOG[1] = (JOGADOR *) malloc(sizeof (JOGADOR) * TOTAL);
-    
-    if(JOG==NULL || JOG[0]==NULL || JOG[1]==NULL)
-    {
+
+    if (JOG == NULL || JOG[0] == NULL || JOG[1] == NULL) {
         printf("\nNao foi possivel alocar memoria\n");
         return 0;
     }
@@ -1556,11 +1561,15 @@ int main(int argc, char** argv) {
         return 3;
     }
 
-    pthread_t receber_cliente;
+    pthread_t receber_cliente, receber_arbitro;
+    mkfifo(FIFO, 0600);
+    mkfifo(FIFO_Arbitro, 0600);
 
     pthread_create(&receber_cliente, NULL, &Func_receber_cliente, NULL);
+    pthread_create(&receber_arbitro, NULL, &Receber_Arbitro, NULL);
 
-    mkfifo(FIFO, 0600);
+
+
 
     do {
         printf("\nComando: ");

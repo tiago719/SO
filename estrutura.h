@@ -6,6 +6,7 @@
  */
 
 #define FIFO "/tmp/fifo"
+#define FIFO_Arbitro "/tmp/FIFO_Arbitro"
 #define limSupXRedes 18
 #define limInfXRedes 4
 #define MaxX 21
