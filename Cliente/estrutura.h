@@ -17,6 +17,7 @@ typedef struct {
     int fim;
     int tempo;
     int numClientes;
+    int intervalo;
 } RESULTADOS;
 
 typedef struct {
@@ -28,6 +29,7 @@ typedef struct {
     int flag_log;
     int flag_desliga;
     int flag_operacao;
+    int flag_arbitro;
 } clie_serv; //CLIENTE PARA SERVER
 
 typedef struct {

@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
-#include "../estrutura.h"
+#include "estrutura.h"
 
 typedef struct {
     int y, x;
@@ -49,13 +49,10 @@ RESULTADOS resultados;
 int Ndefesa, Navanc, sair = 0;
 pthread_t tempo, tarefa_bola;
 
-
 void bolaParaMeio() {
     ball.x = 11;
     ball.y = 26;
 }
-
-
 
 /*
  * 0 - NAO OCUPADO
@@ -88,10 +85,19 @@ void removeCliente(int index) {
     strcpy(clientes.c[index].username, "");
 }
 
+void resetClientes()
+{
+    int i;
+    for(i=0;i<clientes.tam;i++)
+    {
+        clientes.c[i].equi='-';
+        clientes.c[i].jogador=NULL;
+    }
+}
+
 void acabaJogo() {
     int i, fd;
     serv_clie j;
-
 
     resultados.fim = 1;
     for (i = 0; i < TOTAL; i++) {
@@ -100,6 +106,8 @@ void acabaJogo() {
     }
 
     pthread_join(tarefa_bola, NULL);
+    
+    resetClientes();
 
     usleep(100);
 
@@ -119,7 +127,6 @@ void acabaJogo() {
             j.flag_logado = 0;
             j.flag_stop = 1;
             j.resultados = resultados;
-
 
             write(fd, &j, sizeof (serv_clie));
             close(fd);
@@ -510,7 +517,7 @@ void passe(POSICAO orig, POSICAO * dest) {
     }
 }
 
-void * bola(void * dados) {
+void * bola() {
     serv_clie j;
     int i, a;
 
@@ -519,18 +526,21 @@ void * bola(void * dados) {
             continue;
 
         verificaGolo();
+        j.xant=ball.x;
+        j.yant=ball.y;
+        j.xnovo=ball.x;
+        j.ynovo=ball.y;
+        j.jogador='o';
+        j.equipa='n';
 
-        if (posse_bola != NULL) {
-
-            j.xant = ball.x;
-            j.yant = ball.y;
-
+        if (posse_bola != NULL) 
+        {
             if (posse_bola->equi == 'a') {
-                j.jogador = 'o' + 1;
+                j.equipa='a';
                 ball.y = posse_bola->posicao.y + 1;
 
             } else {
-                j.jogador = 'o' + 2;
+                j.equipa='b';
                 ball.y = posse_bola->posicao.y - 1;
 
             }
@@ -547,25 +557,8 @@ void * bola(void * dados) {
                     }
                 }
             }
-
             j.resultados = resultados;
-
-            //            atualizaCampo(&j);
         }
-        //
-        //            for(a=0;a<2;a++)
-        //            {
-        //                for(i=0;i<TOTAL;i++)
-        //                {
-        //                    if(JOG[a][i].posicao.x==ball.x && JOG[a][i].posicao.y==ball.y)
-        //                    {
-        //                        posse_bola=&JOG[a][i];
-        //                        break;
-        //                    }
-        //                }
-        //            }            
-        //            golo(ele[total * 2].x, ele[total * 2].y);
-        //        }
         for (a = 0; a < 2; a++) {
             for (i = 0; i < TOTAL; i++) {
                 if (JOG[a][i].posicao.x == ball.x && JOG[a][i].posicao.y == ball.y) {
@@ -574,6 +567,7 @@ void * bola(void * dados) {
                 }
             }
         }
+        atualizaCampo(&j);
         usleep(100);
     }
     pthread_exit(0);
@@ -618,8 +612,7 @@ void * move_jogador(void * dados) {
 
                 if (isOcupado(jog->posicao.x + d.x, jog->posicao.y + d.y) == 1)
                     continue;
-                //                pthread_mutex_unlock(&trinco);
-
+                
                 j.jogador = '0' + jog->num;
                 j.equipa = jog->equi;
 
@@ -635,107 +628,6 @@ void * move_jogador(void * dados) {
                 pthread_mutex_unlock(&trinco);
 
                 atualizaCampo(&j);
-                ;
-
-
-                //if (posse_bola != NULL) {
-                //    if (posse_bola->equi != jog->equi) {
-
-                //        if (ele[jog->num].y < ele[total * 2].y) {
-                //            d.y++;
-                //        } else {
-                //            d.y--;
-                //        }
-
-                //        if (ele[jog->num].x < ele[total * 2].x) {
-                //            d.x++;
-                //        } else {
-                //            d.x--;
-                //        }
-
-                //    } else if (posse_bola->equi == jog->equi && jog != posse_bola) {
-
-                //        if (jog->equi == 'a') {
-                //            d.x++;
-                //        } else {
-                //            d.x--;
-
-                //        }
-                //    } else {
-                //        int x = 0;
-                //        if (posse_bola->equi == 'a') {
-                //            int ye = 1;
-
-                //            if (ele[jog->num].x <= 51 - 8 && ele[jog->num].y >= 11 - 8 && ele[jog->num].y <= 11 + 8) {
-                //                //remata
-                //            } else {
-                //                for (i = 1; i < (total); i++) {
-                //                    if (ele[i].x == ele[jog->num].x + 2 && ele[i].y == ele[jog->num].y) {
-                //                        ye = 0;
-                //                        break;
-                //                    }
-                //                }
-                //                if (ye) {
-                //                    d.x++;
-                //                } else {
-                //                    //passa bola
-
-                //                }
-                //            }
-
-
-                //        } else {
-                //            int ye = 1;
-
-                //            if (ele[jog->num].x <= 8 && ele[jog->num].y >= 11 - 8 && ele[jog->num].y <= 11 + 8) {
-                //                //remata
-                //            } else {
-                //                for (i = total + 1; i < (total)*2; i++) {
-                //                    if (ele[i].x == ele[jog->num].x - 2 && ele[i].y == ele[jog->num].y) {
-                //                        ye = 0;
-                //                        break;
-                //                    }
-                //                }
-                //                if (ye) {
-                //                    d.x--;
-                //                } else {
-                //                    //passa bola
-
-                //                }
-                //            }
-
-                //        }
-                //    }
-                //} else {
-                //    if (ele[jog->num].y < ele[total * 2].y) {
-                //        d.y++;
-                //    } else {
-                //        d.y--;
-                //    }
-
-                //    if (ele[jog->num].x < ele[total * 2].x) {
-                //        d.x++;
-                //    } else {
-                //        d.x--;
-                //    }
-                //}
-
-                //if (ele[jog->num].y == ele[total * 2].y && ele[jog->num].x == ele[total * 2].x) {//se esta na bola
-                //    //                int num, num2;
-                //    //                if(jog->equi=='a')
-                //    //                    num=0;
-                //    //                else
-                //    //                    num=1;
-                //    //                if(jog->num>=10)
-                //    //                    num2=jog->num-10;
-                //    //                else
-                //    //                    num2=jog->num;
-                //    //                posse_bola = &JOG[num][num2];
-                //    posse_bola = jog;
-
-
-                //}
-
             }
             usleep(jog->tempo);
         }
@@ -1360,11 +1252,10 @@ void operacao(clie_serv *cliente, CLIENTES * cli) {
     }
 }
 
-
 void comecaJogo() {
     int i;
 
-    montaCampo();
+    inicializaJogadores();
     resultados.res_eq1 = 0;
     resultados.res_eq2 = 0;
     resultados.fim = 0;
@@ -1379,7 +1270,6 @@ void comecaJogo() {
         pthread_create(&JOG[1][i].thread, NULL, &move_jogador, (void *) &JOG[1][i]);
     }
 }
-
 
 void * contar_seg() {
     serv_clie j;

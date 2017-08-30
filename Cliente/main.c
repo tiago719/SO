@@ -15,7 +15,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
-#include "../estrutura.h"
+#include "estrutura.h"
 
 void atualiza_campo(serv_clie * j) 
 {  
