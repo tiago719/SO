@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
-#include "estrutura.h"
+#include "../estrutura.h"
 
 typedef struct {
     int y, x;
