@@ -186,11 +186,11 @@ void logar(int * flag_log) {
 
     do {
         printf("\nuser: ");
-        //scanf("%s", user); //TODO:DESCOMENTAR
-        strcpy(user, "user1");//TODO:COMENTAR
+        scanf("%s", user); //TODO:DESCOMENTAR
+        //strcpy(user, "user1");//TODO:COMENTAR
         printf("\npass: "); 
-        //scanf("%s", pass); //TODO:DESCOMENTAR
-        strcpy(pass, "pass1"); //TODO:COMENTAR
+        scanf("%s", pass); //TODO:DESCOMENTAR
+        //strcpy(pass, "pass1"); //TODO:COMENTAR
         strcpy(novo.user, user);
         strcpy(novo.pass, pass);
         novo.id = getpid();
@@ -219,6 +219,7 @@ void desconetar(int s) {
     unlink(str);
     if (s == SIGINT) {
         endwin();
+        clear();
 
         int fd;
         clie_serv des;
@@ -362,7 +363,9 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
 
     envia_comando();
 
-    //pthread_join(tarefa1, NULL);
+    pthread_join(tarefa1, NULL);
+    pthread_join(tarefa2, NULL);
+
 
     endwin();
     return 0;

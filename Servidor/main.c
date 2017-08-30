@@ -47,8 +47,7 @@ int TOTAL;
 CLIENTES clientes;
 RESULTADOS resultados;
 int Ndefesa, Navanc, sair = 0;
-
-pthread_t jogo, tempo, tarefa_bola; 
+pthread_t tempo, tarefa_bola; 
 
 
 /*
@@ -1502,6 +1501,9 @@ void acabaJogo(){
             j.flag_campo=0;
             j.flag_logado=0;
             j.flag_stop=1;
+            
+            write(fd, &j,sizeof(serv_clie));
+            close(fd);
         }
     }
 }
