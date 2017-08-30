@@ -22,7 +22,7 @@ typedef struct {
 
 typedef struct {
     char equi;
-    int tempo, num, posse_bola, humano, fim, precisao_remate;
+    int tempo, num, posse_bola, humano, precisao_remate;
     pthread_t thread;
     POSICAO posicao;
 } JOGADOR;
@@ -329,15 +329,12 @@ void inicializaJogadores() {
     int cont = 0, i;
 
     //INICIAOLIZACAO REDES
-    JOG[0][0].fim = 0;
     JOG[0][0].humano = 0;
     JOG[0][0].num = cont;
     JOG[0][0].precisao_remate = 25;
     JOG[0][0].tempo = 300000;
     JOG[0][0].equi = 'a';
 
-
-    JOG[1][0].fim = 0;
     JOG[1][0].humano = 0;
     JOG[1][0].num = cont;
     JOG[1][0].precisao_remate = 25;
@@ -350,14 +347,12 @@ void inicializaJogadores() {
     //---------------------
     //INICIAOLIZACAO DEFESAS
     for (i = 1; i <= Ndefesa; i++) {
-        JOG[0][i].fim = 0;
         JOG[0][i].humano = 0;
         JOG[0][i].num = cont;
         JOG[0][i].precisao_remate = 80;
         JOG[0][i].tempo = 400000;
         JOG[0][i].equi = 'a';
 
-        JOG[1][i].fim = 0;
         JOG[1][i].humano = 0;
         JOG[1][i].num = cont;
         JOG[1][i].precisao_remate = 80;
@@ -373,14 +368,12 @@ void inicializaJogadores() {
     //INICIAOLIZACAO AVANC
     cont = 6;
     for (; i < TOTAL; i++) {
-        JOG[0][i].fim = 0;
         JOG[0][i].humano = 0;
         JOG[0][i].num = cont;
         JOG[0][i].precisao_remate = 60;
         JOG[0][i].tempo = 300000;
         JOG[0][i].equi = 'a';
 
-        JOG[1][i].fim = 0;
         JOG[1][i].humano = 0;
         JOG[1][i].num = cont;
         JOG[1][i].precisao_remate = 60;
@@ -1535,16 +1528,7 @@ void trataSinal(int s) {
 
     if (s == SIGALRM) {
         printf("\nACABOU TEMPO\n");
-        resultados.fim = 1;
-
-        int i;
-        for (i = 0; i < TOTAL; i++) {
-            pthread_join(JOG[0][i].thread, NULL);
-            pthread_join(JOG[1][i].thread, NULL);
-        }
-
-
-        //        acabaJogo();
+        acabaJogo();
         return;
     }
 
