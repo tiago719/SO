@@ -15,7 +15,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
-#include "estrutura.h"
+#include "../estrutura.h"
 
 void atualiza_campo(serv_clie * j) 
 {  
@@ -125,6 +125,7 @@ void ligacao() {
     novo.id = getpid();
     novo.flag_log = 0;
     novo.flag_con = 1;
+    novo.flag_arbitro = 0;
     novo.flag_desliga = 0;
     novo.flag_operacao = 0;
     int fd = open(FIFO, O_WRONLY);

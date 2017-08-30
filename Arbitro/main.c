@@ -121,6 +121,7 @@ void ligacao() {
     novo.flag_con = 1;
     novo.flag_desliga = 0;
     novo.flag_operacao = 0;
+    novo.flag_arbitro = 1;
     int fd = open(FIFO, O_WRONLY);
     sprintf(str, "/tmp/ccc%d", getpid());
     mkfifo(str, 0600);
@@ -238,17 +239,10 @@ void envia_comando() {
             continue;
         }
 
-        p.op = i;
-        p.id = getpid();
-        p.flag_operacao = 0;
-        p.flag_con = 0;
-        p.flag_log = 0;
-        p.flag_desliga = 0;
-        p.flag_arbitro = 1;
+        
+        fd = open(FIFO_Arbitro, O_WRONLY);
 
-        fd = open(FIFO, O_WRONLY);
-
-        i = write(fd, &p, sizeof (clie_serv));
+        i = write(fd, &i, sizeof (int));
         close(fd);
 
     } while (!sair);
@@ -268,13 +262,13 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     //    int flag_log = 0;
 
 
-    if (access(FIFO, F_OK) != 0) {
+    if (access(FIFO_Arbitro, F_OK) != 0) {
         printf("servidor off\n");
         return 3;
     }
-    ligacao();
+//    ligacao();
 
-    pthread_create(&tarefa1, NULL, &recebe, NULL);
+//    pthread_create(&tarefa1, NULL, &recebe, NULL);
     //    pthread_create(&tarefa2, NULL, &recebe, NULL);
     //pthread_create(&tarefa3, NULL, &recebe, (void *) &flag_log);
 
@@ -294,8 +288,8 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
 
     envia_comando();
 
-    pthread_join(tarefa1, NULL);
-    pthread_join(tarefa2, NULL);
+//    pthread_join(tarefa1, NULL);
+//    pthread_join(tarefa2, NULL);
 
 
     //    endwin();
