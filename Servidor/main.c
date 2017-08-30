@@ -136,7 +136,6 @@ void acabaJogo() {
 
 void atualizaCampo(serv_clie * j) {
     int i, fd;
-    //        pthread_mutex_lock(&trinco);
 
     for (i = 0; i < clientes.tam; i++) {
         if (clientes.c[i].logado) {
@@ -164,7 +163,6 @@ void atualizaCampo(serv_clie * j) {
             close(fd);
         }
     }
-    //    pthread_mutex_unlock(&trinco);
 }
 
 void inicializaCampo() {
@@ -571,7 +569,6 @@ void * bola() {
 }
 
 void * move_jogador(void * dados) {
-    int i, a;
     JOGADOR *jog;
     jog = (JOGADOR *) dados;
     POSICAO d;
@@ -579,7 +576,8 @@ void * move_jogador(void * dados) {
     j.flag_campo = 1;
     j.flag_logado = 0;
 
-    while (!resultados.fim) {
+    while (!resultados.fim) 
+    {
         if (jog->falta)
             continue;
 
@@ -606,9 +604,13 @@ void * move_jogador(void * dados) {
 
             if (jog->posicao.y + d.y >= 0 && jog->posicao.y + d.y < MaxY &&
                     jog->posicao.x + d.x >= 0 && jog->posicao.x + d.x < MaxX) {
+                pthread_mutex_lock(&trinco);
 
                 if (isOcupado(jog->posicao.x + d.x, jog->posicao.y + d.y) == 1)
+                {
+                    pthread_mutex_unlock(&trinco);
                     continue;
+                }
                 
                 j.jogador = '0' + jog->num;
                 j.equipa = jog->equi;
@@ -638,8 +640,6 @@ void * move_redes(void * dados) {
     jog = (JOGADOR *) dados;
     POSICAO d;
     serv_clie j;
-    int a, i, ye;
-    //printf("\nestou no move redes \n");
 
     while (!resultados.fim) {
         if (jog->falta)
@@ -654,9 +654,14 @@ void * move_redes(void * dados) {
             } else {
                 d.x = -1;
             }
-            if (jog->posicao.x + d.x >= limInfXRedes && jog->posicao.x + d.x <= limSupXRedes) {
+            if (jog->posicao.x + d.x >= limInfXRedes && jog->posicao.x + d.x <= limSupXRedes) 
+            {
+                pthread_mutex_lock(&trinco);
                 if (isOcupado(jog->posicao.x + d.x, jog->posicao.x + d.y) == 1)
+                {
+                    pthread_mutex_unlock(&trinco);
                     continue;
+                }
 
                 j.xant = jog->posicao.x;
                 j.yant = jog->posicao.y;
@@ -669,7 +674,8 @@ void * move_redes(void * dados) {
 
                 j.jogador = '0' + jog->num;
                 j.equipa = jog->equi;
-
+                
+                pthread_mutex_unlock(&trinco);
                 atualizaCampo(&j);
             }
         }
@@ -1561,8 +1567,6 @@ int main(int argc, char** argv) {
 
         scanf(" %[^\n]", cmd);
 
-        //printf("\ncomando: %s\n", cmd);
-
         char comandos[7][30] = {"start", "stop", "user", "users", "result", "red", "shutdown"};
 
         primeiro = strtok(cmd, " ");
@@ -1586,7 +1590,7 @@ int main(int argc, char** argv) {
 
                     alarm(resultados.tempo);
 
-                    //comecaJogo();
+                    //comecaJogo();//TODO:COMENTAR
                     pthread_create(&tempo, NULL, &contar_seg, NULL);
                     sleep(1);
                 } else {
