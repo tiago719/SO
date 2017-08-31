@@ -21,6 +21,11 @@ typedef struct {
 } POSICAO;
 
 typedef struct {
+    POSICAO orig;
+    POSICAO * dest;
+} POSICOES_PASSE;
+
+typedef struct {
     char equi;
     int tempo, num, posse_bola, humano, precisao_remate, falta;
     pthread_t thread;
@@ -47,6 +52,7 @@ int TOTAL;
 CLIENTES clientes;
 CLIENTE Arbitro;
 RESULTADOS resultados;
+int TempoJogo;
 int Ndefesa, Navanc, sair = 0;
 pthread_t tempo, tarefa_bola;
 
@@ -99,7 +105,7 @@ void acabaJogo() {
     serv_clie j;
 
     resultados.fim = 1;
-    posse_bola=NULL;
+    posse_bola = NULL;
     for (i = 0; i < TOTAL; i++) {
         pthread_join(JOG[0][i].thread, NULL);
         pthread_join(JOG[1][i].thread, NULL);
@@ -166,41 +172,41 @@ void atualizaCampo(serv_clie * j) {
 }
 
 void inicializaCampo() {
-//    int i;
-//    serv_clie j;
-//
-//    for (i = 0; i < TOTAL; i++) {
-//        j.xnovo = JOG[0][i].posicao.x;
-//        j.ynovo = JOG[0][i].posicao.y;
-//        j.xant = JOG[0][i].posicao.x;
-//        j.yant = JOG[0][i].posicao.y;
-//        j.jogador = '0' + (JOG[0][i].num);
-//        j.equipa = JOG[0][i].equi;
-//
-//        usleep(100000);
-//
-//        atualizaCampo(&j);
-//        usleep(100);
-//
-//        j.xnovo = JOG[1][i].posicao.x;
-//        j.ynovo = JOG[1][i].posicao.y;
-//        j.xant = JOG[1][i].posicao.x;
-//        j.yant = JOG[1][i].posicao.y;
-//        j.jogador = '0' + (JOG[1][i].num);
-//        j.equipa = JOG[1][i].equi;
-//
-//        atualizaCampo(&j);
-//        usleep(100);
-//    }
-//
-//    j.xnovo = ball.x;
-//    j.ynovo = ball.y;
-//    j.xant = ball.x;
-//    j.yant = ball.y;
-//    j.jogador = 'o';
-//    j.equipa = 'n';
-//    atualizaCampo(&j);
-//    usleep(100);
+        int i;
+        serv_clie j;
+    
+        for (i = 0; i < TOTAL; i++) {
+            j.xnovo = JOG[0][i].posicao.x;
+            j.ynovo = JOG[0][i].posicao.y;
+            j.xant = JOG[0][i].posicao.x;
+            j.yant = JOG[0][i].posicao.y;
+            j.jogador = '0' + (JOG[0][i].num);
+            j.equipa = JOG[0][i].equi;
+    
+            usleep(100000);
+    
+            atualizaCampo(&j);
+            usleep(100);
+    
+            j.xnovo = JOG[1][i].posicao.x;
+            j.ynovo = JOG[1][i].posicao.y;
+            j.xant = JOG[1][i].posicao.x;
+            j.yant = JOG[1][i].posicao.y;
+            j.jogador = '0' + (JOG[1][i].num);
+            j.equipa = JOG[1][i].equi;
+    
+            atualizaCampo(&j);
+            usleep(100);
+        }
+    
+        j.xnovo = ball.x;
+        j.ynovo = ball.y;
+        j.xant = ball.x;
+        j.yant = ball.y;
+        j.jogador = 'o';
+        j.equipa = 'n';
+        atualizaCampo(&j);
+        usleep(100);
 }
 
 void montaCampo() {
@@ -472,19 +478,17 @@ void verificaGolo() {
     }
 }
 
-void passe(POSICAO orig, POSICAO * dest) {
+void * fazerPasse (void * dados){
+    POSICOES_PASSE * p = (POSICOES_PASSE *) dados;
+    POSICAO orig = p->orig;
+    POSICAO * dest = p->dest;
     
-
     POSICAO d;
     serv_clie j;
 
     JOGADOR *temp = posse_bola;
-    
     posse_bola = NULL;
-    
-    if (fork() != 0)
-        return;
-    
+
     while (orig.x != dest->x || orig.y != dest->y && posse_bola == NULL) {
         verificaGolo();
         d.x = 0;
@@ -515,6 +519,18 @@ void passe(POSICAO orig, POSICAO * dest) {
         atualizaCampo(&j);
         usleep(temp->tempo);
     }
+    pthread_exit(0);
+    
+}
+
+void passe(POSICAO orig, POSICAO * dest) {
+    POSICOES_PASSE p;
+    p.dest = dest;
+    p.orig = orig;
+    pthread_t tar;
+    pthread_create(&tar, NULL, &fazerPasse, (void *) &p);
+    return;
+    
 }
 
 void * bola() {
@@ -566,6 +582,7 @@ void * bola() {
                 }
             }
         }
+
         atualizaCampo(&j);
         usleep(100);
     }
@@ -732,7 +749,8 @@ void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
                     //passa para o cam
                     if (cli->c[i].jogador == posse_bola) {
                         if ((rand() % 100) < cli->c[i].jogador->precisao_remate) {
-                            passe(ball, &cli->c[i].jogador->posicao);
+                            
+                            passe(ball, &procuraJogador(cli->c[i].equi, cam)->posicao);
                             //printf("\nVou para o sitio certo\n");
                         } else {
                             //printf("\nVou para o sitio aleatorio\n");
@@ -1268,10 +1286,10 @@ void comecaJogo() {
     pthread_create(&JOG[0][0].thread, NULL, &move_redes, (void *) &JOG[0][0]);
     pthread_create(&JOG[1][0].thread, NULL, &move_redes, (void *) &JOG[1][0]);
 
-    for (i = 1; i < TOTAL; i++) {
-        pthread_create(&JOG[0][i].thread, NULL, &move_jogador, (void *) &JOG[0][i]);
-        pthread_create(&JOG[1][i].thread, NULL, &move_jogador, (void *) &JOG[1][i]);
-    }
+    //    for (i = 1; i < TOTAL; i++) {
+    //        pthread_create(&JOG[0][i].thread, NULL, &move_jogador, (void *) &JOG[0][i]);
+    //        pthread_create(&JOG[1][i].thread, NULL, &move_jogador, (void *) &JOG[1][i]);
+    //    }
 }
 
 void * contar_seg() {
@@ -1337,7 +1355,7 @@ void trataSinal(int s) {
 //------ARBITRO------
 
 void AR_Inicio() {
-    alarm(resultados.tempo);
+    alarm(TempoJogo);
     pthread_create(&tempo, NULL, &contar_seg, NULL);
     comecaJogo();
 }
@@ -1399,7 +1417,7 @@ void * Func_receber_cliente(void * dados) {
             if (cliente.flag_arbitro) {
                 if (Arbitro.id == -1)
                     continue;
-                
+
                 Arbitro.id = cliente.id;
                 continue;
             }
@@ -1470,11 +1488,11 @@ void * Func_receber_cliente(void * dados) {
 
             fclose(f);
         } else if (cliente.flag_desliga) {
-            if (cliente.flag_arbitro){
+            if (cliente.flag_arbitro) {
                 Arbitro.id = -1;
                 continue;
             }
-                
+
             for (i = 0; i < clientes.tam; i++) {
                 if (clientes.c[i].id == cliente.id) {
                     clientes.c[i].logado = 0;
@@ -1554,9 +1572,14 @@ int main(int argc, char** argv) {
     Ndefesa = atoi(AVndefesa);
     Navanc = atoi(AVnavanc);
 
-
-    Ndefesa = 4; //TODO:alterar para VA
-    Navanc = 4; //TODO:alterar para VA
+    if (Ndefesa < 0 || Ndefesa > 4) {
+        printf("Numero de DEFESAS invalido atribuido 2\n");
+        Ndefesa = 2;
+    }
+    if (Navanc < 0 || Navanc > 4) {
+        printf("Numero de AVANCADOS invalido atribuido 2\n");
+        Navanc = 2;
+    }
 
     TOTAL = (1 + Navanc + Ndefesa);
 
@@ -1612,8 +1635,8 @@ int main(int argc, char** argv) {
                 }
                 if (resultados.fim == 1) {
                     resultados.tempo = atoi(primeiro);
+                    TempoJogo = resultados.tempo;
 
-                    
                     sleep(1);
                 } else {
                     printf("\nEsta a decorrer um jogo!\n");
