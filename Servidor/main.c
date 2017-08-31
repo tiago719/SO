@@ -1553,10 +1553,15 @@ int main(int argc, char** argv) {
 
     Ndefesa = atoi(AVndefesa);
     Navanc = atoi(AVnavanc);
-
-
-    Ndefesa = 4; //TODO:alterar para VA
-    Navanc = 4; //TODO:alterar para VA
+    
+    if ( Ndefesa < 0 || Ndefesa > 4 ){
+        printf("Numero de DEFESAS invalido atribuido 2\n");
+        Ndefesa = 2;
+    }
+    if ( Navanc < 0 || Navanc > 4 ){
+        printf("Numero de AVANCADOS invalido atribuido 2\n");
+        Navanc = 2;
+    }
 
     TOTAL = (1 + Navanc + Ndefesa);
 
