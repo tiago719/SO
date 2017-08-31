@@ -1322,6 +1322,8 @@ void shutdown() {
 void trataSinal(int s) {
 
     if (s == SIGALRM) {
+        if (resultados.intervalo == 1)
+            return;
         printf("\nACABOU TEMPO\n");
         acabaJogo();
         return;
@@ -1335,17 +1337,21 @@ void trataSinal(int s) {
 //------ARBITRO------
 
 void AR_Inicio() {
+    alarm(resultados.tempo);
+    pthread_create(&tempo, NULL, &contar_seg, NULL);
     comecaJogo();
 }
 
 void AR_Itervalo() {
     bolaParaMeio();
     resultados.intervalo = 1;
+    alarm(0);
     posse_bola = NULL;
 }
 
 void AR_Recomeca() {
     resultados.intervalo = 0;
+    alarm(resultados.tempo);
 }
 
 void AR_Falta() {
@@ -1607,10 +1613,7 @@ int main(int argc, char** argv) {
                 if (resultados.fim == 1) {
                     resultados.tempo = atoi(primeiro);
 
-                    alarm(resultados.tempo);
-
-                    //comecaJogo();//TODO:COMENTAR
-                    pthread_create(&tempo, NULL, &contar_seg, NULL);
+                    
                     sleep(1);
                 } else {
                     printf("\nEsta a decorrer um jogo!\n");
