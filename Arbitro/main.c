@@ -53,64 +53,50 @@ int sair = 0;
 //}
 //
 
-void *recebe(void * dados) {
-    //    int * flag_log = (int *) dados;
-    int i, fd, flagCampo = 0;
-    char str[80], vencedor, msgFimJogo[80];
-    serv_clie jogada, ant;
-
-    sprintf(str, "/tmp/ccc%d", getpid());
-
-    while (1) //TODO: define condicao de paragem
-    {
-        fd = open(str, O_RDONLY);
-        i = read(fd, &jogada, sizeof (serv_clie));
-        //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", jogada.xant, jogada.yant, jogada.xnovo, jogada.ynovo);
-
-        //printf("\nChegou fl:%d, fc %d", jogada.flag_logado, jogada.flag_campo);
-
-        if (i == sizeof (serv_clie)) {
-            //            if (jogada.flag_logado) 
-            //            {
-            //                *flag_log = 1;
-            //            }
-            if (jogada.flag_campo) {
-                //                if (flagCampo == 0) {
-                //                    clear();
-                //                    flagCampo = 1;
-                //                }
-                //                if (jogada.resultados.res_eq1 != ant.resultados.res_eq1
-                //                        || jogada.resultados.res_eq2 != ant.resultados.res_eq2) {
-                ////                    clear();
-                ////                    atualiza_campo(&jogada);
-                //                } else {
-                ////                    atualiza_campo(&jogada);
-                //
-                //                }
-                //                ant = jogada;
-            } else if (jogada.flag_stop) {
-                //                clear();
-                //                attron(COLOR_PAIR(2)); //TODO:Mudar para branco
-                flagCampo = 0;
-
-                if (jogada.resultados.res_eq1 == jogada.resultados.res_eq2) {
-                    //                    sprintf(msgFimJogo, "O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
-                    //                    addstr(msgFimJogo);
-                } else {
-                    if (jogada.resultados.res_eq1 > jogada.resultados.res_eq2)
-                        vencedor = 'a';
-                    else
-                        vencedor = 'b';
-                    //                    sprintf(msgFimJogo, "O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
-                    //                    addstr(msgFimJogo);
-                }
-                //                refresh();
-            }
-        }
-        close(fd);
-    }
-    pthread_exit(0);
-}
+//void *recebe(void * dados) {
+//    //    int * flag_log = (int *) dados;
+//    int i, fd, flagCampo = 0;
+//    char str[80], vencedor, msgFimJogo[80];
+//    serv_clie jogada, ant;
+//
+//    sprintf(str, "/tmp/ccc%d", getpid());
+//
+//    while (1) //TODO: define condicao de paragem
+//    {
+//        fd = open(str, O_RDONLY);
+//        i = read(fd, &jogada, sizeof (serv_clie));
+//        //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", jogada.xant, jogada.yant, jogada.xnovo, jogada.ynovo);
+//
+//        //printf("\nChegou fl:%d, fc %d", jogada.flag_logado, jogada.flag_campo);
+//
+//        if (i == sizeof (serv_clie)) {
+//            //            if (jogada.flag_logado) 
+//            //            {
+//            //                *flag_log = 1;
+//            //            }
+//            if (jogada.flag_stop) {
+//                //                clear();
+//                //                attron(COLOR_PAIR(2)); //TODO:Mudar para branco
+//                flagCampo = 0;
+//
+//                if (jogada.resultados.res_eq1 == jogada.resultados.res_eq2) {
+//                    //                    sprintf(msgFimJogo, "O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+//                    //                    addstr(msgFimJogo);
+//                } else {
+//                    if (jogada.resultados.res_eq1 > jogada.resultados.res_eq2)
+//                        vencedor = 'a';
+//                    else
+//                        vencedor = 'b';
+//                    //                    sprintf(msgFimJogo, "O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+//                    //                    addstr(msgFimJogo);
+//                }
+//                //                refresh();
+//            }
+//        }
+//        close(fd);
+//    }
+//    pthread_exit(0);
+//}
 
 void ligacao() {
     clie_serv novo;
@@ -181,8 +167,6 @@ void desconetar(int s) {
 
     unlink(str);
     if (s == SIGINT) {
-        //        endwin();
-        //        clear();
 
         int fd;
         clie_serv des;
@@ -190,6 +174,7 @@ void desconetar(int s) {
         fd = open(FIFO, O_WRONLY);
         des.id = getpid();
         des.flag_desliga = 1;
+        des.flag_arbitro = 1;
         des.flag_con = 0;
         des.flag_log = 0;
         des.flag_operacao = 0;
@@ -255,44 +240,17 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     signal(SIGINT, SIG_IGN);
 
     signal(SIGINT, desconetar);
-    //    signal(SIGUSR1, diz);
 
     clie_serv p;
     pthread_t tarefa1, tarefa2, tarefa3;
-    //    int flag_log = 0;
 
 
     if (access(FIFO_Arbitro, F_OK) != 0) {
         printf("servidor off\n");
         return 3;
     }
-//    ligacao();
-
-//    pthread_create(&tarefa1, NULL, &recebe, NULL);
-    //    pthread_create(&tarefa2, NULL, &recebe, NULL);
-    //pthread_create(&tarefa3, NULL, &recebe, (void *) &flag_log);
-
-    //    logar(&flag_log);
-
-    //    initscr();
-    //    use_default_colors();
-    //    start_color();
-    //    init_pair(1, COLOR_BLUE, -1);
-    //    init_pair(2, COLOR_RED, -1);
-    //    init_pair(3, COLOR_WHITE, -1);
-    //    curs_set(0);
-    //    cbreak();
-    //    noecho();
-    //    keypad(stdscr, TRUE);
-    //    clear();
 
     envia_comando();
-
-//    pthread_join(tarefa1, NULL);
-//    pthread_join(tarefa2, NULL);
-
-
-    //    endwin();
     return 0;
 
 }

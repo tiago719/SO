@@ -166,41 +166,41 @@ void atualizaCampo(serv_clie * j) {
 }
 
 void inicializaCampo() {
-    int i;
-    serv_clie j;
-
-    for (i = 0; i < TOTAL; i++) {
-        j.xnovo = JOG[0][i].posicao.x;
-        j.ynovo = JOG[0][i].posicao.y;
-        j.xant = JOG[0][i].posicao.x;
-        j.yant = JOG[0][i].posicao.y;
-        j.jogador = '0' + (JOG[0][i].num);
-        j.equipa = JOG[0][i].equi;
-
-        usleep(100000);
-
-        atualizaCampo(&j);
-        usleep(100);
-
-        j.xnovo = JOG[1][i].posicao.x;
-        j.ynovo = JOG[1][i].posicao.y;
-        j.xant = JOG[1][i].posicao.x;
-        j.yant = JOG[1][i].posicao.y;
-        j.jogador = '0' + (JOG[1][i].num);
-        j.equipa = JOG[1][i].equi;
-
-        atualizaCampo(&j);
-        usleep(100);
-    }
-
-    j.xnovo = ball.x;
-    j.ynovo = ball.y;
-    j.xant = ball.x;
-    j.yant = ball.y;
-    j.jogador = 'o';
-    j.equipa = 'n';
-    atualizaCampo(&j);
-    usleep(100);
+//    int i;
+//    serv_clie j;
+//
+//    for (i = 0; i < TOTAL; i++) {
+//        j.xnovo = JOG[0][i].posicao.x;
+//        j.ynovo = JOG[0][i].posicao.y;
+//        j.xant = JOG[0][i].posicao.x;
+//        j.yant = JOG[0][i].posicao.y;
+//        j.jogador = '0' + (JOG[0][i].num);
+//        j.equipa = JOG[0][i].equi;
+//
+//        usleep(100000);
+//
+//        atualizaCampo(&j);
+//        usleep(100);
+//
+//        j.xnovo = JOG[1][i].posicao.x;
+//        j.ynovo = JOG[1][i].posicao.y;
+//        j.xant = JOG[1][i].posicao.x;
+//        j.yant = JOG[1][i].posicao.y;
+//        j.jogador = '0' + (JOG[1][i].num);
+//        j.equipa = JOG[1][i].equi;
+//
+//        atualizaCampo(&j);
+//        usleep(100);
+//    }
+//
+//    j.xnovo = ball.x;
+//    j.ynovo = ball.y;
+//    j.xant = ball.x;
+//    j.yant = ball.y;
+//    j.jogador = 'o';
+//    j.equipa = 'n';
+//    atualizaCampo(&j);
+//    usleep(100);
 }
 
 void montaCampo() {
@@ -473,15 +473,20 @@ void verificaGolo() {
 }
 
 void passe(POSICAO orig, POSICAO * dest) {
-    verificaGolo();
+    
 
     POSICAO d;
     serv_clie j;
 
     JOGADOR *temp = posse_bola;
-
+    
     posse_bola = NULL;
+    
+    if (fork() != 0)
+        return;
+    
     while (orig.x != dest->x || orig.y != dest->y && posse_bola == NULL) {
+        verificaGolo();
         d.x = 0;
         d.y = 0;
 
@@ -1317,16 +1322,14 @@ void shutdown() {
 void trataSinal(int s) {
 
     if (s == SIGALRM) {
+        if (resultados.intervalo == 1)
+            return;
         printf("\nACABOU TEMPO\n");
         acabaJogo();
         return;
     }
 
-    if (s == SIGINT) {
-        shutdown();
-    }
-
-    if (s == SIGUSR1) {
+    if (s == SIGINT || s == SIGUSR1) {
         shutdown();
     }
 }
@@ -1334,17 +1337,21 @@ void trataSinal(int s) {
 //------ARBITRO------
 
 void AR_Inicio() {
+    alarm(resultados.tempo);
+    pthread_create(&tempo, NULL, &contar_seg, NULL);
     comecaJogo();
 }
 
 void AR_Itervalo() {
     bolaParaMeio();
     resultados.intervalo = 1;
+    alarm(0);
     posse_bola = NULL;
 }
 
 void AR_Recomeca() {
     resultados.intervalo = 0;
+    alarm(resultados.tempo);
 }
 
 void AR_Falta() {
@@ -1390,6 +1397,9 @@ void * Func_receber_cliente(void * dados) {
 
         if (cliente.flag_con) {
             if (cliente.flag_arbitro) {
+                if (Arbitro.id == -1)
+                    continue;
+                
                 Arbitro.id = cliente.id;
                 continue;
             }
@@ -1460,6 +1470,11 @@ void * Func_receber_cliente(void * dados) {
 
             fclose(f);
         } else if (cliente.flag_desliga) {
+            if (cliente.flag_arbitro){
+                Arbitro.id = -1;
+                continue;
+            }
+                
             for (i = 0; i < clientes.tam; i++) {
                 if (clientes.c[i].id == cliente.id) {
                     clientes.c[i].logado = 0;
@@ -1524,6 +1539,7 @@ int main(int argc, char** argv) {
     char *primeiro;
     char *segundo;
     FILE *f;
+    Arbitro.id = -1;
 
     int i, flag = 0;
     char cmd[80];
@@ -1532,11 +1548,11 @@ int main(int argc, char** argv) {
     resultados.fim = 1;
     resultados.numClientes = clientes.tam;
 
-    //    const char* AVndefesa = getenv("NDEFESAS");
-    //    const char* AVnavanc = getenv("NAVANCADOS");
-    //
-    //    Ndefesa = (int) AVndefesa;
-    //    Navanc = (int) AVnavanc;
+    const char* AVndefesa = getenv("NDEFESAS");
+    const char* AVnavanc = getenv("NAVANCADOS");
+
+    Ndefesa = atoi(AVndefesa);
+    Navanc = atoi(AVnavanc);
 
 
     Ndefesa = 4; //TODO:alterar para VA
@@ -1597,10 +1613,7 @@ int main(int argc, char** argv) {
                 if (resultados.fim == 1) {
                     resultados.tempo = atoi(primeiro);
 
-                    alarm(resultados.tempo);
-
-                    //comecaJogo();//TODO:COMENTAR
-                    pthread_create(&tempo, NULL, &contar_seg, NULL);
+                    
                     sleep(1);
                 } else {
                     printf("\nEsta a decorrer um jogo!\n");
