@@ -177,7 +177,6 @@ void logar(int * flag_log) {
         sleep(1);
 
     } while ((*flag_log) == 0);
-    //printf("\nOLAOL!!\n");
 }
 
 void desconetar(int s) {
@@ -194,16 +193,14 @@ void desconetar(int s) {
         fd = open(FIFO, O_WRONLY);
         des.id = getpid();
         des.flag_desliga = 1;
+        des.flag_arbitro = 0;
         des.flag_con = 0;
         des.flag_log = 0;
         des.flag_operacao = 0;
-
-        close(fd);
         
-        sprintf(str, "/tmp/ccc%d", getpid());
-
-        unlink(str);
-
+        write(fd, &des, sizeof (clie_serv));
+        
+        close(fd);        
         exit(3);
     } else if (s == SIGUSR1) 
     {
@@ -212,10 +209,6 @@ void desconetar(int s) {
         refresh();
         printf("\nDesconetado pelo Servidor!\n");
         
-        sprintf(str, "/tmp/ccc%d", getpid());
-
-        unlink(str);
-
         exit(3);
     }
 }
@@ -304,7 +297,7 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     signal(SIGINT, SIG_IGN);
 
     signal(SIGINT, desconetar);
-    //    signal(SIGUSR1, diz);
+    signal(SIGUSR1, desconetar);
 
     clie_serv p;
     pthread_t tarefa1, tarefa2, tarefa3;
