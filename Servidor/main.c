@@ -784,7 +784,8 @@ void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
 }
 
 void controlaJogador(int op, CLIENTE * cliente) {
-    int xSum = 0, ySum = 0, a, b, maxXJog = MaxX, minXJog = 0, ye;
+    
+    int xSum = 0, ySum = 0, maxXJog = MaxX, minXJog = 0;
     serv_clie j;
 
     switch (op) {
@@ -803,6 +804,9 @@ void controlaJogador(int op, CLIENTE * cliente) {
     }
 
     if (cliente->jogador == NULL)
+        return;
+    
+    if (cliente->jogador->falta == 1)
         return;
 
     if (cliente->jogador->num == 0)//se redes
