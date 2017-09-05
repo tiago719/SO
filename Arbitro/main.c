@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-//#include <ncurses.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
@@ -78,8 +77,6 @@ void envia_comando() {
 
         scanf(" %[^\n]", cmd);
 
-        //printf("\ncomando: %s\n", cmd);
-
         char comandos[5][30] = {"inicio", "intervalo", "recomeca", "falta", "termina"};
 
         primeiro = strtok(cmd, " ");
@@ -106,7 +103,7 @@ void envia_comando() {
 
 }
 
-int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
+int main(int argc, char** argv) {
 
     signal(SIGINT, SIG_IGN);
 

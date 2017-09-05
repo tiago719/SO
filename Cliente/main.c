@@ -17,24 +17,25 @@
 #include <signal.h>
 #include "../estrutura.h"
 
-void atualiza_campo(serv_clie * j) 
-{  
-    char tempo[20],clientes[20]; 
-    if(j->equipa=='a')
+pthread_t tarefa1, tarefa2;
+
+void atualiza_campo(serv_clie * j) {
+    char tempo[20], clientes[20];
+    if (j->equipa == 'a')
         attron(COLOR_PAIR(2));
-    else if(j->equipa=='b')
+    else if (j->equipa == 'b')
         attron(COLOR_PAIR(1));
-    else   
+    else
         attron(COLOR_PAIR(3));
-                
+
     mvaddch(j->xant, j->yant, ' ');
 
     mvaddch(j->xnovo, j->ynovo, j->jogador);
-    
+
     sprintf(tempo, "Tempo: %d", j->resultados.tempo);
-    
-    attron(COLOR_PAIR(2));//TODO:meter a cor a 3
-    mvaddstr(22,0,tempo);
+
+    attron(COLOR_PAIR(3));
+    mvaddstr(22, 0, tempo);
 
     attron(COLOR_PAIR(2));
     mvaddch(22, 23, '0' + j->resultados.res_eq1);
@@ -42,43 +43,35 @@ void atualiza_campo(serv_clie * j)
     mvaddch(22, 24, '-');
     attron(COLOR_PAIR(1));
     mvaddch(22, 25, '0' + j->resultados.res_eq2);
-    
-    
-    attron(COLOR_PAIR(1));//TODO:meter a cor a 3
+
+
+    attron(COLOR_PAIR(3));
     sprintf(clientes, "Numero Clientes: %d", j->resultados.numClientes);
-    mvaddstr(22,41,clientes);
-        
+    mvaddstr(22, 41, clientes);
+
     refresh();
 }
 
 void *recebe(void * dados) {
     int * flag_log = (int *) dados;
-    int i, fd, flagCampo=0;
+    int i, fd, flagCampo = 1;
     char str[80], vencedor, msgFimJogo[80];
     serv_clie jogada, ant;
 
     sprintf(str, "/tmp/ccc%d", getpid());
 
-     while (1) //TODO: define condicao de paragem
-     {
+    while (1) {
         fd = open(str, O_RDONLY);
         i = read(fd, &jogada, sizeof (serv_clie));
-        //printf("\nXant: %d Yant: %d Xnovo: %d Ynovo: %d", jogada.xant, jogada.yant, jogada.xnovo, jogada.ynovo);
 
-        //printf("\nChegou fl:%d, fc %d", jogada.flag_logado, jogada.flag_campo);
-
-        if (i == sizeof (serv_clie)) 
-        {
-            if (jogada.flag_logado) 
-            {
+        if (i == sizeof (serv_clie)) {
+            if (jogada.flag_logado) {
                 *flag_log = 1;
             }
-            if (jogada.flag_campo) 
-            {
-                if(flagCampo==0)
-                {
+            if (jogada.flag_campo) {
+                if (flagCampo == 0) {
                     clear();
-                    flagCampo=1;
+                    flagCampo = 1;
                 }
                 if (jogada.resultados.res_eq1 != ant.resultados.res_eq1
                         || jogada.resultados.res_eq2 != ant.resultados.res_eq2) {
@@ -89,30 +82,25 @@ void *recebe(void * dados) {
 
                 }
                 ant = jogada;
-            }
-            else if (jogada.flag_stop) 
-            {
+            } else if (jogada.flag_stop) {
                 clear();
-                attron(COLOR_PAIR(2));//TODO:Mudar para branco
-                flagCampo=0;
-                
-                if(jogada.resultados.res_eq1==jogada.resultados.res_eq2)
-                    {
-                        sprintf(msgFimJogo, "O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
-                        addstr(msgFimJogo);
-                    }
+                attron(COLOR_PAIR(3));
+                flagCampo = 0;
+
+                if (jogada.resultados.res_eq1 == jogada.resultados.res_eq2) {
+                    sprintf(msgFimJogo, "O jogo terminou empatado (%d - %d).", jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                    addstr(msgFimJogo);
+                } else {
+                    if (jogada.resultados.res_eq1 > jogada.resultados.res_eq2)
+                        vencedor = 'a';
                     else
-                    {
-                        if(jogada.resultados.res_eq1>jogada.resultados.res_eq2)
-                            vencedor='a';
-                        else
-                            vencedor='b';
-                        sprintf(msgFimJogo, "O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
-                        addstr(msgFimJogo);
-                    }
+                        vencedor = 'b';
+                    sprintf(msgFimJogo, "O jogo terminou vencendo a equipa %c (%d - %d)", vencedor, jogada.resultados.res_eq1, jogada.resultados.res_eq2);
+                    addstr(msgFimJogo);
+                }
                 refresh();
             }
-        } 
+        }
         close(fd);
     }
     pthread_exit(0);
@@ -134,8 +122,7 @@ void ligacao() {
 
     int a = write(fd, &novo, sizeof (clie_serv));
 
-    if (a != sizeof (clie_serv)) 
-    {
+    if (a != sizeof (clie_serv)) {
         close(fd);
         return;
     }
@@ -154,11 +141,9 @@ void logar(int * flag_log) {
 
     do {
         printf("\nuser: ");
-        scanf("%s", user); //TODO:DESCOMENTAR
-        //strcpy(user, "user1");//TODO:COMENTAR
-        printf("\npass: "); 
-        scanf("%s", pass); //TODO:DESCOMENTAR
-        //strcpy(pass, "pass1"); //TODO:COMENTAR
+        scanf("%s", user);
+        printf("\npass: ");
+        scanf("%s", pass);
         strcpy(novo.user, user);
         strcpy(novo.pass, pass);
         novo.id = getpid();
@@ -181,11 +166,10 @@ void logar(int * flag_log) {
 
 void desconetar(int s) {
     char str[80];
-    
+
     if (s == SIGINT) {
         endwin();
-        clear();
-        refresh();
+
 
         int fd;
         clie_serv des;
@@ -197,18 +181,20 @@ void desconetar(int s) {
         des.flag_con = 0;
         des.flag_log = 0;
         des.flag_operacao = 0;
-        
+
         write(fd, &des, sizeof (clie_serv));
-        
-        close(fd);        
+
+        close(fd);
+        pthread_cancel(tarefa1);
+        pthread_cancel(tarefa2);
         exit(3);
-    } else if (s == SIGUSR1) 
-    {
+    } else if (s == SIGUSR1) {
         endwin();
-        clear();
-        refresh();
+
         printf("\nDesconetado pelo Servidor!\n");
-        
+
+        pthread_cancel(tarefa1);
+        pthread_cancel(tarefa2);
         exit(3);
     }
 }
@@ -292,7 +278,7 @@ void envia_comando() {
     }
 }
 
-int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
+int main(int argc, char** argv) {
 
     signal(SIGINT, SIG_IGN);
 
@@ -300,7 +286,6 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     signal(SIGUSR1, desconetar);
 
     clie_serv p;
-    pthread_t tarefa1, tarefa2, tarefa3;
     int flag_log = 0;
 
 
@@ -312,7 +297,6 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
 
     pthread_create(&tarefa1, NULL, &recebe, (void *) &flag_log);
     pthread_create(&tarefa2, NULL, &recebe, (void *) &flag_log);
-    //pthread_create(&tarefa3, NULL, &recebe, (void *) &flag_log);
 
     logar(&flag_log);
 
@@ -329,9 +313,6 @@ int main(int argc, char** argv) {//TODO: AVISAR SERVER QUE SE CONETOU
     clear();
 
     envia_comando();
-
-    pthread_join(tarefa1, NULL);
-    pthread_join(tarefa2, NULL);
 
 
     endwin();
