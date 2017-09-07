@@ -18,50 +18,24 @@
 
 int sair = 0;
 
-void ligacao() {
-    clie_serv novo;
-
-    novo.id = getpid();
-    novo.flag_log = 0;
-    novo.flag_con = 1;
-    novo.flag_desliga = 0;
-    novo.flag_operacao = 0;
-    novo.flag_arbitro = 1;
-    int fd = open(FIFO, O_WRONLY);
-
-    int a = write(fd, &novo, sizeof (clie_serv));
-    close(fd);
-
-    if (a != sizeof (clie_serv)) {
-        printf("\nERRO A ENVIAR DADOS(LOGIN)!!\n");
-        return;
-    }
-}
-
 void desconetar(int s) {
     if (s == SIGINT) {
 
         int fd;
-        clie_serv des;
+        arbitro_serv des;
+        sair = 1;
 
-        fd = open(FIFO, O_WRONLY);
-        des.id = getpid();
-        des.flag_desliga = 1;
-        des.flag_arbitro = 1;
-        des.flag_con = 0;
-        des.flag_log = 0;
-        des.flag_operacao = 0;
+        fd = open(FIFO_Arbitro, O_WRONLY);
+        des.pid = getpid();
+        des.op = -1;//desligar
 
         write(fd, &des, sizeof (clie_serv));
 
         close(fd);
-        sair = 1;
         usleep(100);
-
         exit(3);
     } else if (s == SIGUSR1) {
         printf("\nDesconetado pelo Servidor!\n");
-
         exit(3);
     }
 }
@@ -70,7 +44,7 @@ void envia_comando() {
     char cmd[80];
     char *primeiro;
     int i, fd;
-    clie_serv p;
+    arbitro_serv p;
 
     do {
         printf("\nComando: ");
@@ -91,11 +65,12 @@ void envia_comando() {
             printf("\nComando Invalido!\n");
             continue;
         }
-
+        p.op = i;
+        p.pid = getpid();
 
         fd = open(FIFO_Arbitro, O_WRONLY);
 
-        i = write(fd, &i, sizeof (int));
+        i = write(fd, &p, sizeof (arbitro_serv));
         close(fd);
 
     } while (!sair);
@@ -109,11 +84,11 @@ int main(int argc, char** argv) {
 
     signal(SIGINT, desconetar);
 
-    if (access(FIFO_Arbitro, F_OK) != 0) {
+    if (access(FIFO, F_OK) != 0) {
         printf("servidor off\n");
         return 3;
     }
-    ligacao();
+    
     envia_comando();
     return 0;
 

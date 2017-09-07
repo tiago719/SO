@@ -27,7 +27,7 @@ typedef struct {
 
 typedef struct {
     char equi;
-    int tempo, num, posse_bola, humano, precisao_remate, falta;
+    int tempo, num, humano, precisao_remate, falta;
     pthread_t thread;
     POSICAO posicao;
 } JOGADOR;
@@ -633,7 +633,8 @@ void * move_jogador(void * dados) {
                     jog->posicao.x + d.x >= 0 && jog->posicao.x + d.x < MaxX) {
                 pthread_mutex_lock(&trinco);
 
-                if (isOcupado(jog->posicao.x + d.x, jog->posicao.y + d.y) == 1) {
+                if (isOcupado(jog->posicao.x + d.x, jog->posicao.y + d.y) == 1) 
+                {
                     pthread_mutex_unlock(&trinco);
                     continue;
                 }
@@ -672,6 +673,9 @@ void * move_redes(void * dados) {
             continue;
 
         if (!jog->humano) {
+            
+            
+            
             d.x = 0;
             int r = rand() % 2;
 
@@ -701,6 +705,16 @@ void * move_redes(void * dados) {
 
                 pthread_mutex_unlock(&trinco);
                 atualizaCampo(&j);
+            }
+            if (jog == posse_bola){
+                sleep(2.5);
+               
+                
+                int a = posse_bola->equi == 'a' ? 0 : 1;
+                int b = rand() % TOTAL;
+                POSICAO p = JOG[a][b].posicao;
+                passe(ball, p);
+                
             }
         }
         usleep(jog->tempo);
@@ -784,7 +798,7 @@ void interpreta_comando(int cam, CLIENTES * cli, clie_serv * novo) {
 }
 
 void controlaJogador(int op, CLIENTE * cliente) {
-    
+
     int xSum = 0, ySum = 0, maxXJog = MaxX, minXJog = 0;
     serv_clie j;
 
@@ -805,7 +819,7 @@ void controlaJogador(int op, CLIENTE * cliente) {
 
     if (cliente->jogador == NULL)
         return;
-    
+
     if (cliente->jogador->falta == 1)
         return;
 
@@ -826,7 +840,8 @@ void controlaJogador(int op, CLIENTE * cliente) {
         case 1:
             return;
         case 2:
-            posse_bola = cliente->jogador;
+            if (!resultados.intervalo)
+                posse_bola = cliente->jogador;
             break;
         default:
             break;
@@ -846,12 +861,6 @@ void controlaJogador(int op, CLIENTE * cliente) {
     j.xnovo = cliente->jogador->posicao.x;
     j.ynovo = cliente->jogador->posicao.y;
     atualizaCampo(&j);
-
-
-
-
-
-
 
     usleep(cliente->jogador->tempo);
 }
@@ -1070,14 +1079,15 @@ void shutdown() {
         kill(Arbitro.id, SIGUSR1);
         unlink(FIFO_Arbitro);
     }
-    free(clientes.c);
+    if (clientes.tam > 0)
+        free(clientes.c);
 
     free(JOG[0]);
     free(JOG[1]);
     free(JOG);
 
     unlink(FIFO);
-    unlink(FIFO_Arbitro);
+//    unlink(FIFO_Arbitro);
 
     pthread_cancel(receber_arbitro);
     pthread_cancel(receber_cliente);
@@ -1102,6 +1112,27 @@ void trataSinal(int s) {
     }
 }
 
+void mandaBola(char str[]) {
+    int fd;
+    serv_clie j;
+    j.flag_campo = 1;
+    j.flag_stop = 0;
+    j.flag_logado = 1;
+
+    j.xant = ball.x;
+    j.yant = ball.y;
+    j.xnovo = ball.x;
+    j.ynovo = ball.y;
+    j.equipa = 'n';
+    j.jogador = 'o';
+    j.resultados = resultados;
+
+    fd = open(str, O_WRONLY);
+    write(fd, &j, sizeof (serv_clie));
+    close(fd);
+
+}
+
 //------ARBITRO------
 
 void AR_Inicio() {
@@ -1116,23 +1147,37 @@ void AR_Inicio() {
 }
 
 void AR_Itervalo() {
+    int i;
+    char str[20];
     if (resultados.intervalo == 1) {
         printf("\nJa esta em intervalo!\n");
         return;
     }
     bolaParaMeio();
+
+    for (i = 0; i<clientes.tam; i++) {
+        sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
+        mandaBola(str);
+    }
+
     resultados.intervalo = 1;
     alarm(0);
     posse_bola = NULL;
 }
 
 void AR_Recomeca() {
+    int i;
+    char str[20];
     if (resultados.intervalo != 1) {
         printf("\nNao esta em intervalo!\n");
         return;
     }
     resultados.intervalo = 0;
     alarm(resultados.tempo);
+    for (i = 0; i<clientes.tam; i++) {
+        sprintf(str, "/tmp/ccc%d", clientes.c[i].id);
+        mandaBola(str);
+    }
 }
 
 void AR_Falta() {
@@ -1161,26 +1206,7 @@ void AR_Termina() {
 
 //-------------------
 
-void mandaBola(char str[]) {
-    int fd;
-    serv_clie j;
-    j.flag_campo = 1;
-    j.flag_stop = 0;
-    j.flag_logado = 1;
 
-    j.xant = ball.x;
-    j.yant = ball.y;
-    j.xnovo = ball.x;
-    j.ynovo = ball.y;
-    j.equipa = 'n';
-    j.jogador = 'o';
-    j.resultados = resultados;
-    
-    fd = open(str, O_WRONLY);
-    write(fd, &j, sizeof (serv_clie));
-    close(fd);
-
-}
 
 void * ReceberCliente(void * dados) {
 
@@ -1208,13 +1234,6 @@ void * ReceberCliente(void * dados) {
         close(fd);
 
         if (cliente.flag_con) {
-            if (cliente.flag_arbitro) {
-                if (Arbitro.id != -1)
-                    continue;
-
-                Arbitro.id = cliente.id;
-                continue;
-            }
             if (clientes.tam < 19) {
                 if (clientes.tam == 0)
                     clientes.c = (CLIENTE *) malloc(sizeof (CLIENTE));
@@ -1280,13 +1299,6 @@ void * ReceberCliente(void * dados) {
             sleep(1);
             mandaBola(str);
         } else if (cliente.flag_desliga) {
-            if (cliente.flag_arbitro) {
-                Arbitro.id = -1;
-                unlink(FIFO_Arbitro);
-                continue;
-            }
-
-
 
             for (i = 0; i < clientes.tam; i++) {
                 if (clientes.c[i].id == cliente.id) {
@@ -1304,13 +1316,16 @@ void * ReceberCliente(void * dados) {
 }
 
 void * ReceberArbitro(void * dados) {
-    int fd, op;
+    int fd;
+    arbitro_serv op;
     while (!sair) {
         if (access(FIFO_Arbitro, F_OK) != 0)
             continue;
         fd = open(FIFO_Arbitro, O_RDONLY);
-        read(fd, &op, sizeof (int));
-        switch (op) {
+        read(fd, &op, sizeof (arbitro_serv));
+
+        Arbitro.id = op.pid;
+        switch (op.op) {
             case 0:
                 AR_Inicio();
                 break;
@@ -1325,6 +1340,9 @@ void * ReceberArbitro(void * dados) {
                 break;
             case 4:
                 AR_Termina();
+                break;
+            case -1:
+                Arbitro.id = -1;
                 break;
         }
     }
@@ -1341,7 +1359,7 @@ int main(int argc, char** argv) {
     strcpy(clientes.nome_ficheiro, argv[1]);
 
     srand((unsigned int) time(NULL));
-    signal(SIGINT, trataSinal); 
+    signal(SIGINT, trataSinal);
     signal(SIGALRM, trataSinal);
     signal(SIGUSR1, trataSinal);
 
