@@ -46,6 +46,11 @@ typedef struct {
     RESULTADOS resultados;
 } serv_clie; //SERVER PARA CLIENTE
 
+typedef struct {
+    int pid;
+    int op;
+} arbitro_serv;
+
 //typedef struct { char user[80], pass[80]; int pid; } LOGIN;
 
 
